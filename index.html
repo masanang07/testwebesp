@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kontrol ESP32 Internet</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 40px; }
+    button { padding: 10px 20px; font-size: 16px; margin: 5px; cursor: pointer; }
+    input { padding: 8px; font-size: 16px; width: 200px; }
+  </style>
+</head>
+<body>
+  <h2>Kontrol ESP32 via Internet</h2>
+  <p>Status Broker: <b id="status">Menghubungkan...</b></p>
+
+  <hr>
+  <h3>1. Lampu LED Bawaan</h3>
+  <button onclick="kirimLED('ON')">Nyalakan LED</button>
+  <button onclick="kirimLED('OFF')">Matikan LED</button>
+
+  <hr>
+  <h3>2. Tampil Teks ke LCD</h3>
+  <input type="text" id="pesanLcd" placeholder="Maksimal 16 karakter" maxlength="16">
+  <button onclick="kirimLCD()">Kirim ke LCD</button>
+
+  <script>
+    const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+
+    client.on('connect', () => {
+      document.getElementById('status').innerText = 'Terhubung!';
+      document.getElementById('status').style.color = 'green';
+    });
+
+    client.on('error', () => {
+      document.getElementById('status').innerText = 'Gagal Konek';
+      document.getElementById('status').style.color = 'red';
+    });
+
+    function kirimLED(state) {
+      client.publish('anang_test_iot/led', state);
+    }
+
+    function kirimLCD() {
+      const teks = document.getElementById('pesanLcd').value;
+      if (teks) {
+        client.publish('anang_test_iot/lcd', teks);
+      }
+    }
+  </script>
+</body>
+</html>

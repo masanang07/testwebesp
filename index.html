@@ -1,54 +1,346 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kontrol ESP32 Internet</title>
+  <title>Nexus Smart Home | ESP32</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <style>
-    body { font-family: sans-serif; text-align: center; margin-top: 40px; }
-    button { padding: 10px 20px; font-size: 16px; margin: 5px; cursor: pointer; }
-    input { padding: 8px; font-size: 16px; width: 200px; }
-  </style>
-</head>
-<body>
-  <h2>Kontrol ESP32 via Internet</h2>
-  <p>Status Broker: <b id="status">Menghubungkan...</b></p>
-
-  <hr>
-  <h3>1. Lampu LED Bawaan</h3>
-  <button onclick="kirimLED('ON')">Nyalakan LED</button>
-  <button onclick="kirimLED('OFF')">Matikan LED</button>
-
-  <hr>
-  <h3>2. Tampil Teks ke LCD</h3>
-  <input type="text" id="pesanLcd" placeholder="Maksimal 16 karakter" maxlength="16">
-  <button onclick="kirimLCD()">Kirim ke LCD</button>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
   <script>
-    const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
-
-    client.on('connect', () => {
-      document.getElementById('status').innerText = 'Terhubung!';
-      document.getElementById('status').style.color = 'green';
-    });
-
-    client.on('error', () => {
-      document.getElementById('status').innerText = 'Gagal Konek';
-      document.getElementById('status').style.color = 'red';
-    });
-
-    function kirimLED(state) {
-      client.publish('anang_test_iot/led', state);
-    }
-
-    function kirimLCD() {
-      const teks = document.getElementById('pesanLcd').value;
-      if (teks) {
-        client.publish('anang_test_iot/lcd', teks);
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { poppins: ['Poppins', 'sans-serif'] },
+          colors: {
+            darkbg: '#050509',
+            panel: '#10111a',
+            neonblue: '#00f0ff',
+            neonpurple: '#8a2be2',
+          }
+        }
       }
     }
+  </script>
+  <style>
+    body { font-family: 'Poppins', sans-serif; background-color: #050509; color: #ffffff; overflow-x: hidden; }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #050509; }
+    ::-webkit-scrollbar-thumb { background: #1a1c29; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #2a2d42; }
+
+    /* Glassmorphism & Borders */
+    .glass-panel {
+      background: rgba(16, 17, 26, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Glow Effects */
+    .text-glow { text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+    .box-glow { box-shadow: 0 0 20px rgba(0, 240, 255, 0.15), inset 0 0 15px rgba(0, 240, 255, 0.05); border-color: rgba(0, 240, 255, 0.3) !important; }
+    .icon-glow { filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.8)); color: #00f0ff !important; }
+
+    /* Modern Toggle Switch (iOS Style Adapted for Dark Mode) */
+    .toggle-checkbox:checked { right: 0; border-color: #00f0ff; }
+    .toggle-checkbox:checked + .toggle-label { background-color: rgba(0, 240, 255, 0.2); border-color: #00f0ff; box-shadow: 0 0 15px rgba(0, 240, 255, 0.4); }
+    .toggle-checkbox:checked + .toggle-label:after { transform: translateX(100%); background-color: #00f0ff; box-shadow: 0 0 10px #00f0ff; }
+    
+    .toggle-label {
+      width: 50px; height: 26px; background-color: #1a1c29; border: 1px solid rgba(255,255,255,0.2); 
+      border-radius: 9999px; position: relative; cursor: pointer; transition: all 0.3s ease;
+    }
+    .toggle-label:after {
+      content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; 
+      background-color: #6b7280; border-radius: 50%; transition: all 0.3s ease;
+    }
+
+    /* Pulse Animation for Connection Dot */
+    @keyframes pulse-dot {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 100, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 255, 100, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 100, 0); }
+    }
+    .status-dot.online { background-color: #00ff66; animation: pulse-dot 2s infinite; }
+    .status-dot.offline { background-color: #ff3333; box-shadow: 0 0 10px #ff3333; }
+    .status-dot.demo { background-color: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
+  </style>
+</head>
+<body class="flex h-screen antialiased selection:bg-neonblue selection:text-black">
+
+  <aside class="w-64 glass-panel border-r border-white/5 hidden md:flex flex-col relative z-20">
+    <div class="h-20 flex items-center px-8 border-b border-white/5">
+      <i class="ph-fill ph-hexagon text-3xl text-neonblue mr-3 icon-glow"></i>
+      <h1 class="text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-neonblue to-neonpurple">NEXUS</h1>
+    </div>
+    <nav class="flex-1 px-4 py-6 space-y-2">
+      <a href="#" class="flex items-center px-4 py-3 rounded-xl bg-gradient-to-r from-neonblue/10 to-transparent border border-neonblue/20 text-neonblue text-glow">
+        <i class="ph ph-squares-four text-xl mr-3"></i> Dashboard
+      </a>
+      <a href="#" class="flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+        <i class="ph ph-devices text-xl mr-3"></i> Devices
+      </a>
+      <a href="#" class="flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+        <i class="ph ph-chart-line-up text-xl mr-3"></i> History
+      </a>
+      <a href="#" class="flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+        <i class="ph ph-gear text-xl mr-3"></i> Settings
+      </a>
+    </nav>
+    <div class="p-6">
+      <div class="glass-panel rounded-xl p-4 text-sm border border-white/5 relative overflow-hidden group cursor-pointer hover:border-neonpurple/50 transition-colors">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-neonblue to-neonpurple opacity-50"></div>
+        <p class="text-gray-400 mb-1">System Status</p>
+        <p class="text-green-400 font-semibold flex items-center"><i class="ph ph-check-circle mr-2"></i> All Systems Nominal</p>
+      </div>
+    </div>
+  </aside>
+
+  <main class="flex-1 flex flex-col relative z-10 overflow-y-auto">
+    <!-- Header -->
+    <header class="h-20 glass-panel border-b border-white/5 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30">
+      <div class="flex items-center md:hidden">
+        <i class="ph-fill ph-hexagon text-2xl text-neonblue mr-2 icon-glow"></i>
+        <h1 class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-neonblue to-neonpurple">NEXUS</h1>
+      </div>
+      
+      <div class="hidden md:block">
+        <h2 class="text-lg font-medium text-gray-200">Welcome back, <span class="text-white font-semibold">Anang Apri</span></h2>
+        <p class="text-xs text-gray-400">Manage your smart home network</p>
+      </div>
+
+      <div class="flex items-center space-x-6">
+        <!-- MQTT Connection Status Indicator -->
+        <div class="flex items-center glass-panel px-4 py-2 rounded-full border border-white/10">
+          <div id="statusDot" class="w-2.5 h-2.5 rounded-full status-dot offline mr-3"></div>
+          <span id="statusText" class="text-sm font-medium text-gray-300">Connecting...</span>
+        </div>
+        
+        <!-- User Profile Avatar -->
+        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-neonpurple to-neonblue p-0.5 shadow-[0_0_15px_rgba(138,43,226,0.3)]">
+          <div class="w-full h-full bg-panel rounded-full flex items-center justify-center overflow-hidden">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Anang&backgroundColor=transparent" alt="Avatar" class="w-full h-full object-cover">
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="p-6 lg:p-10 space-y-8">
+      <!-- Stats Overview (Dummy) -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass-panel p-6 rounded-2xl border border-white/5 flex items-center justify-between">
+          <div>
+            <p class="text-gray-400 text-sm mb-1">Power Usage</p>
+            <h3 class="text-2xl font-bold text-white">12.4 <span class="text-sm text-neonblue font-normal">kWh</span></h3>
+          </div>
+          <div class="w-12 h-12 rounded-full bg-neonblue/10 flex items-center justify-center text-neonblue">
+            <i class="ph ph-lightning text-2xl"></i>
+          </div>
+        </div>
+        <div class="glass-panel p-6 rounded-2xl border border-white/5 flex items-center justify-between">
+          <div>
+            <p class="text-gray-400 text-sm mb-1">Active Devices</p>
+            <h3 class="text-2xl font-bold text-white">3 <span class="text-sm text-gray-500 font-normal">/ 5 Online</span></h3>
+          </div>
+          <div class="w-12 h-12 rounded-full bg-neonpurple/10 flex items-center justify-center text-neonpurple">
+            <i class="ph ph-router text-2xl"></i>
+          </div>
+        </div>
+        <div class="glass-panel p-6 rounded-2xl border border-white/5 flex items-center justify-between">
+          <div>
+            <p class="text-gray-400 text-sm mb-1">Network Uptime</p>
+            <h3 class="text-2xl font-bold text-white">99.9%</h3>
+          </div>
+          <div class="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center text-green-400">
+            <i class="ph ph-check-circle text-2xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-semibold text-white">Connected Devices</h2>
+          <button class="text-sm text-neonblue hover:text-white transition-colors">View All</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          <!-- 1. Real ESP32 Device Card -->
+          <div id="espCard" class="glass-panel p-6 rounded-2xl border border-white/10 transition-all duration-300 group">
+            <div class="flex justify-between items-start mb-6">
+              <div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center transition-all duration-300" id="espIconBg">
+                <i id="espIcon" class="ph-fill ph-lightbulb text-2xl text-gray-500 transition-all duration-300"></i>
+              </div>
+              
+              <!-- Custom Toggle Switch -->
+              <div class="relative inline-block w-[50px] align-middle select-none">
+                <input type="checkbox" name="toggle" id="espToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 opacity-0"/>
+                <label for="espToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+              </div>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-white mb-1">Main ESP32 Node</h3>
+              <p class="text-sm text-gray-400">Built-in LED (GPIO 2)</p>
+            </div>
+            <div class="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+              <span class="text-xs text-gray-500"><i class="ph ph-wifi-high mr-1"></i> Connected</span>
+              <span id="espStatusText" class="text-xs font-bold text-gray-500 uppercase">OFF</span>
+            </div>
+          </div>
+
+          <!-- 2. Dummy Device: Living Room Fan -->
+          <div class="glass-panel p-6 rounded-2xl border border-white/5 transition-all duration-300">
+            <div class="flex justify-between items-start mb-6">
+              <div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
+                <i class="ph-fill ph-wind text-2xl text-gray-500"></i>
+              </div>
+              <div class="relative inline-block w-[50px] align-middle select-none opacity-50 cursor-not-allowed">
+                <input type="checkbox" disabled class="toggle-checkbox absolute block w-6 h-6 rounded-full z-10 opacity-0"/>
+                <label class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300"></label>
+              </div>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-300 mb-1">Smart Fan</h3>
+              <p class="text-sm text-gray-500">Living Room</p>
+            </div>
+            <div class="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+              <span class="text-xs text-gray-500"><i class="ph ph-wifi-slash mr-1 text-red-400"></i> Offline</span>
+              <span class="text-xs font-bold text-gray-600 uppercase">OFF</span>
+            </div>
+          </div>
+
+          <!-- 3. Dummy Device: Garden Light -->
+          <div class="glass-panel p-6 rounded-2xl border border-white/5 transition-all duration-300">
+            <div class="flex justify-between items-start mb-6">
+              <div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
+                <i class="ph-fill ph-plant text-2xl text-gray-500"></i>
+              </div>
+              <div class="relative inline-block w-[50px] align-middle select-none opacity-50 cursor-not-allowed">
+                <input type="checkbox" disabled class="toggle-checkbox absolute block w-6 h-6 rounded-full z-10 opacity-0"/>
+                <label class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300"></label>
+              </div>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-300 mb-1">Garden RGB</h3>
+              <p class="text-sm text-gray-500">Outdoor</p>
+            </div>
+            <div class="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+              <span class="text-xs text-gray-500"><i class="ph ph-wifi-slash mr-1 text-red-400"></i> Offline</span>
+              <span class="text-xs font-bold text-gray-600 uppercase">OFF</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Konfigurasi MQTT HiveMQ WebSockets
+    const brokerUrl = 'wss://broker.hivemq.com:8884/mqtt';
+    const topicPub = 'anang_test_iot/led';
+
+    // Seleksi Elemen UI Dashboard
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    
+    // Seleksi Elemen Card ESP32
+    const espToggle = document.getElementById('espToggle');
+    const espCard = document.getElementById('espCard');
+    const espIcon = document.getElementById('espIcon');
+    const espIconBg = document.getElementById('espIconBg');
+    const espStatusText = document.getElementById('espStatusText');
+
+    let client = null;
+    let isDemoMode = false;
+
+    function initMQTT() {
+      try {
+        // Inisialisasi Klien MQTT dengan error handling
+        client = mqtt.connect(brokerUrl, { connectTimeout: 4000 });
+
+        client.on('connect', () => {
+          console.log('Terhubung ke Broker MQTT!');
+          statusDot.className = 'w-2.5 h-2.5 rounded-full status-dot online mr-3';
+          statusText.innerText = 'System Online';
+          statusText.className = 'text-sm font-medium text-green-400';
+          isDemoMode = false;
+        });
+
+        client.on('error', (err) => {
+          console.warn('Koneksi MQTT Error / Security Restriction:', err);
+          enableDemoMode();
+        });
+
+        client.on('close', () => {
+          if (!isDemoMode) {
+            setOfflineState();
+          }
+        });
+      } catch (err) {
+        console.warn('WebSocket connection restricted by environment:', err);
+        enableDemoMode();
+      }
+    }
+
+    function setOfflineState() {
+      statusDot.className = 'w-2.5 h-2.5 rounded-full status-dot offline mr-3';
+      statusText.innerText = 'Connection Lost';
+      statusText.className = 'text-sm font-medium text-red-400';
+    }
+
+    function enableDemoMode() {
+      isDemoMode = true;
+      statusDot.className = 'w-2.5 h-2.5 rounded-full status-dot demo mr-3';
+      statusText.innerText = 'Demo Mode (Canvas)';
+      statusText.className = 'text-sm font-medium text-amber-400';
+    }
+
+    // Jalankan inisialisasi koneksi secara aman
+    initMQTT();
+
+    // Event Listener Toggle Switch ESP32
+    espToggle.addEventListener('change', (e) => {
+      const isChecked = e.target.checked;
+      const payload = isChecked ? 'ON' : 'OFF';
+      
+      // Kirim perintah MQTT jika terhubung
+      if (client && client.connected) {
+        try {
+          client.publish(topicPub, payload);
+        } catch (err) {
+          console.warn('Gagal mempublikasikan pesan MQTT:', err);
+        }
+      }
+
+      if (isChecked) {
+        // Update UI menjadi Menyala (Glow Effect)
+        espCard.classList.add('box-glow');
+        espIcon.classList.add('icon-glow');
+        espIconBg.classList.add('bg-neonblue/20');
+        espIconBg.classList.remove('bg-white/5');
+        
+        espStatusText.innerText = 'ON';
+        espStatusText.classList.replace('text-gray-500', 'text-neonblue');
+        espStatusText.classList.add('text-glow');
+      } else {
+        // Update UI menjadi Mati (Dark Effect)
+        espCard.classList.remove('box-glow');
+        espIcon.classList.remove('icon-glow');
+        espIconBg.classList.remove('bg-neonblue/20');
+        espIconBg.classList.add('bg-white/5');
+        
+        espStatusText.innerText = 'OFF';
+        espStatusText.classList.replace('text-neonblue', 'text-gray-500');
+        espStatusText.classList.remove('text-glow');
+      }
+    });
   </script>
 </body>
 </html>

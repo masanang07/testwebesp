@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AURA IoT | ESP32 Command Center</title>
   
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  
-  <!-- MQTT.js (EMQX Compatible) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
 
   <style>
@@ -23,17 +20,10 @@
       --text-main: #f8fafc;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       background-color: var(--bg-dark);
-      background-image: 
-        radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.06) 0%, transparent 40%);
       color: var(--text-main);
       font-family: 'Space Grotesk', sans-serif;
       min-height: 100vh;
@@ -43,12 +33,8 @@
       align-items: center;
     }
 
-    .container {
-      width: 100%;
-      max-width: 1050px;
-    }
+    .container { width: 100%; max-width: 1050px; }
 
-    /* TOP NAVBAR */
     .navbar {
       display: flex;
       justify-content: space-between;
@@ -61,265 +47,94 @@
       margin-bottom: 24px;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
+    .brand { display: flex; align-items: center; gap: 12px; }
     .brand-logo {
-      width: 36px;
-      height: 36px;
+      width: 36px; height: 36px;
       background: linear-gradient(135deg, var(--primary-cyan), var(--accent-green));
-      border-radius: 10px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-weight: 700;
-      color: #000;
-      font-size: 18px;
+      border-radius: 10px; display: flex; justify-content: center; align-items: center;
+      font-weight: 700; color: #000; font-size: 18px;
     }
-
-    .brand-title {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-
-    .brand-subtitle {
-      font-size: 11px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
+    .brand-title { font-size: 18px; font-weight: 700; }
+    .brand-subtitle { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
 
     .server-status {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(255, 255, 255, 0.04);
-      padding: 8px 16px;
-      border-radius: 100px;
-      border: 1px solid var(--border-color);
-      font-size: 13px;
-      font-weight: 600;
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255, 255, 255, 0.04); padding: 8px 16px;
+      border-radius: 100px; border: 1px solid var(--border-color);
+      font-size: 13px; font-weight: 600;
     }
 
     .status-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: #f59e0b;
-      box-shadow: 0 0 10px #f59e0b;
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--accent-red); box-shadow: 0 0 10px var(--accent-red);
       transition: all 0.3s ease;
     }
 
     .status-dot.active {
-      background: var(--accent-green);
-      box-shadow: 0 0 12px var(--accent-green);
+      background: var(--accent-green); box-shadow: 0 0 12px var(--accent-green);
     }
 
-    /* DASHBOARD GRID */
     .grid-dashboard {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 20px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;
     }
 
     .card {
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--border-color);
-      border-radius: 24px;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      position: relative;
+      background: var(--card-bg); backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color); border-radius: 24px; padding: 24px;
+      display: flex; flex-direction: column;
     }
 
     .card-title {
-      font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: var(--text-muted);
-      margin-bottom: 20px;
-      font-weight: 700;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      font-size: 14px; text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: 20px; font-weight: 700; display: flex; justify-content: space-between;
     }
 
-    /* MAIN CONTROLLER WIDGET */
     .led-display-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px 0;
+      display: flex; flex-direction: column; align-items: center; padding: 20px 0;
     }
 
     .led-bulb-glow {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background: #1e293b;
-      border: 3px solid rgba(255, 255, 255, 0.05);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 24px;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.8);
+      width: 120px; height: 120px; border-radius: 50%; background: #1e293b;
+      border: 3px solid rgba(255, 255, 255, 0.05); display: flex;
+      justify-content: center; align-items: center; margin-bottom: 24px;
+      transition: all 0.4s ease; box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.8);
     }
 
-    .led-bulb-glow svg {
-      width: 54px;
-      height: 54px;
-      fill: #475569;
-      transition: all 0.4s ease;
-    }
+    .led-bulb-glow svg { width: 54px; height: 54px; fill: #475569; transition: all 0.4s ease; }
 
     .led-bulb-glow.active {
-      background: var(--accent-green);
-      border-color: #4ade80;
-      box-shadow: 
-        0 0 60px rgba(16, 185, 129, 0.6),
-        0 0 120px rgba(16, 185, 129, 0.2),
-        inset 0 0 20px rgba(255, 255, 255, 0.8);
+      background: var(--accent-green); border-color: #4ade80;
+      box-shadow: 0 0 60px rgba(16, 185, 129, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.8);
     }
+    .led-bulb-glow.active svg { fill: #ffffff; }
 
-    .led-bulb-glow.active svg {
-      fill: #ffffff;
-      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.9));
-    }
-
-    .state-indicator {
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 24px;
-    }
-
-    .btn-control-group {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      width: 100%;
-    }
+    .btn-control-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
 
     .btn-cmd {
-      border: none;
-      padding: 16px;
-      border-radius: 14px;
-      font-family: inherit;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      border: none; padding: 16px; border-radius: 14px; font-family: inherit;
+      font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s ease;
     }
-
     .btn-cmd:active { transform: scale(0.95); }
+    .btn-on { background: var(--accent-green); color: #022c22; }
+    .btn-off { background: rgba(244, 63, 94, 0.15); color: var(--accent-red); border: 1px solid rgba(244, 63, 94, 0.3); }
 
-    .btn-on {
-      background: var(--accent-green);
-      color: #022c22;
-      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
-    }
-    .btn-on:hover { background: #059669; color: #fff; }
-
-    .btn-off {
-      background: rgba(244, 63, 94, 0.15);
-      color: var(--accent-red);
-      border: 1px solid rgba(244, 63, 94, 0.3);
-    }
-    .btn-off:hover { background: var(--accent-red); color: #fff; }
-
-    /* STATS & TELEMETRY */
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .metric-box {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border-color);
-      padding: 16px;
-      border-radius: 16px;
-    }
-
-    .metric-val {
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--primary-cyan);
-      margin-top: 4px;
-    }
-
-    .metric-lbl {
-      font-size: 11px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    .info-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .info-item {
-      display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-      padding-bottom: 8px;
-      border-bottom: 1px dashed var(--border-color);
-    }
-
-    .info-item span:last-child {
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--primary-cyan);
-    }
-
-    /* TERMINAL CONSOLE LOG */
     .terminal-window {
-      background: #020617;
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 14px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      height: 220px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+      background: #020617; border: 1px solid var(--border-color);
+      border-radius: 14px; padding: 14px; font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; height: 180px; overflow-y: auto; display: flex;
+      flex-direction: column; gap: 8px;
     }
 
-    .log-entry {
-      line-height: 1.4;
-      word-break: break-all;
-    }
-
+    .log-entry { line-height: 1.4; }
     .log-time { color: var(--text-muted); }
     .log-success { color: var(--accent-green); }
     .log-info { color: var(--primary-cyan); }
-    .log-warn { color: #f59e0b; }
-
-    .btn-clear-log {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-size: 11px;
-      cursor: pointer;
-    }
-    .btn-clear-log:hover { color: var(--text-main); }
+    .log-warn { color: var(--accent-red); }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <!-- NAVBAR -->
     <header class="navbar">
       <div class="brand">
         <div class="brand-logo">ESP</div>
@@ -330,14 +145,11 @@
       </div>
       <div class="server-status">
         <div id="statusDot" class="status-dot"></div>
-        <span id="statusText">Connecting...</span>
+        <span id="statusText">ESP32 OFFLINE</span>
       </div>
     </header>
 
-    <!-- DASHBOARD GRID -->
     <main class="grid-dashboard">
-      
-      <!-- CARD 1: PRIMARY LED CONTROL -->
       <section class="card">
         <div class="card-title">
           <span>Primary Control</span>
@@ -350,7 +162,7 @@
               <path d="M12 2A7 7 0 0 0 5 9c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1z"/>
             </svg>
           </div>
-          <div id="stateText" class="state-indicator" style="color: var(--text-muted);">STANDBY</div>
+          <div id="stateText" style="font-size:18px; font-weight:700; color:var(--text-muted);">STANDBY</div>
         </div>
 
         <div class="btn-control-group">
@@ -359,70 +171,26 @@
         </div>
       </section>
 
-      <!-- CARD 2: TELEMETRY & NETWORK INFO -->
       <section class="card">
-        <div class="card-title">Network Metrics</div>
-        
-        <div class="metrics-grid">
-          <div class="metric-box">
-            <div class="metric-lbl">Packets Sent</div>
-            <div id="packetCount" class="metric-val">0</div>
-          </div>
-          <div class="metric-box">
-            <div class="metric-lbl">Est. Latency</div>
-            <div id="latencyVal" class="metric-val">-- ms</div>
-          </div>
-        </div>
-
-        <div class="info-list">
-          <div class="info-item">
-            <span>MQTT Broker</span>
-            <span>broker.emqx.io</span>
-          </div>
-          <div class="info-item">
-            <span>Port / Protocol</span>
-            <span>8084 (WSS)</span>
-          </div>
-          <div class="info-item">
-            <span>Topic Path</span>
-            <span>anang_test_iot/led</span>
-          </div>
-          <div class="info-item">
-            <span>Target Board</span>
-            <span>ESP32 DevKit V1</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- CARD 3: REAL-TIME CONSOLE LOG -->
-      <section class="card" style="grid-column: 1 / -1;">
-        <div class="card-title">
-          <span>Real-Time Console Log</span>
-          <button class="btn-clear-log" onclick="clearLogs()">Clear Console</button>
-        </div>
-
+        <div class="card-title">Real-Time Terminal Log</div>
         <div id="terminal" class="terminal-window">
-          <div class="log-entry log-info">[SYSTEM] Initializing Dashboard Engine...</div>
+          <div class="log-entry log-info">[SYSTEM] Waiting for ESP32 Signal...</div>
         </div>
       </section>
-
     </main>
   </div>
 
   <script>
-    const TOPIC = 'anang_test_iot/led';
     const BROKER = 'wss://broker.emqx.io:8084/mqtt';
-
     const statusDot = document.getElementById('statusDot');
     const statusText = document.getElementById('statusText');
     const bulbGlow = document.getElementById('bulbGlow');
     const stateText = document.getElementById('stateText');
     const terminal = document.getElementById('terminal');
-    const packetCount = document.getElementById('packetCount');
-    const latencyVal = document.getElementById('latencyVal');
 
-    let sentMessages = 0;
-    const clientId = 'web_cmd_' + Math.random().toString(16).substr(2, 8);
+    let espOnline = false;
+    const clientId = 'web_dashboard_' + Math.random().toString(16).substr(2, 8);
+    const client = mqtt.connect(BROKER, { clientId: clientId, keepalive: 60 });
 
     function writeLog(msg, type = 'info') {
       const timeStr = new Date().toLocaleTimeString();
@@ -433,66 +201,56 @@
       terminal.scrollTop = terminal.scrollHeight;
     }
 
-    function clearLogs() {
-      terminal.innerHTML = '<div class="log-entry log-info">[SYSTEM] Console cleared.</div>';
-    }
-
-    writeLog(`Connecting to ${BROKER} as ClientID: ${clientId}...`, 'warn');
-
-    // Inisialisasi MQTT
-    const client = mqtt.connect(BROKER, { clientId: clientId, keepalive: 60 });
-
     client.on('connect', () => {
-      statusText.innerText = 'ONLINE';
-      statusDot.classList.add('active');
-      writeLog('Connected to EMQX Broker successfully!', 'success');
-      
-      // Ping Estimator
-      latencyVal.innerText = Math.floor(Math.random() * 20 + 25) + ' ms';
+      writeLog('Terhubung ke Server MQTT. Mendengarkan status ESP32...', 'info');
+      // Subscribe status koneksi dan feedback dari ESP32
+      client.subscribe('anang_test_iot/status');
+      client.subscribe('anang_test_iot/led_state');
     });
 
-    client.on('error', (err) => {
-      statusText.innerText = 'ERROR';
-      statusDot.classList.remove('active');
-      writeLog('Connection error: ' + err.message, 'warn');
-    });
+    // Menerima pesan balasan dari ESP32
+    client.on('message', (topic, payload) => {
+      const msg = payload.toString();
 
-    client.on('close', () => {
-      statusText.innerText = 'DISCONNECTED';
-      statusDot.classList.remove('active');
-      writeLog('Connection closed by server. Retrying...', 'warn');
+      if (topic === 'anang_test_iot/status') {
+        if (msg === 'ONLINE') {
+          espOnline = true;
+          statusText.innerText = 'ESP32 ONLINE';
+          statusDot.classList.add('active');
+          writeLog('ESP32 Terdeteksi ONLINE!', 'success');
+        } else {
+          espOnline = false;
+          statusText.innerText = 'ESP32 OFFLINE';
+          statusDot.classList.remove('active');
+          bulbGlow.classList.remove('active');
+          stateText.innerText = 'OFFLINE';
+          stateText.style.color = 'var(--text-muted)';
+          writeLog('ESP32 Terputus / OFFLINE!', 'warn');
+        }
+      }
+
+      if (topic === 'anang_test_iot/led_state') {
+        if (msg === 'ON') {
+          bulbGlow.classList.add('active');
+          stateText.innerText = 'LED ACTIVE';
+          stateText.style.color = 'var(--accent-green)';
+          writeLog('Konfirmasi dari ESP32: Lampu Fisik NYALA', 'success');
+        } else if (msg === 'OFF') {
+          bulbGlow.classList.remove('active');
+          stateText.innerText = 'LED INACTIVE';
+          stateText.style.color = 'var(--accent-red)';
+          writeLog('Konfirmasi dari ESP32: Lampu Fisik MATI', 'warn');
+        }
+      }
     });
 
     function sendMQTT(command) {
-      if (!client.connected) {
-        alert('Server MQTT belum terhubung!');
+      if (!espOnline) {
+        alert('Gagal! ESP32 sedang OFFLINE. Pastikan alat menyala.');
         return;
       }
-
-      const startTime = Date.now();
-      client.publish(TOPIC, command, {}, (err) => {
-        if (!err) {
-          const calcLatency = Date.now() - startTime + Math.floor(Math.random() * 15 + 15);
-          latencyVal.innerText = calcLatency + ' ms';
-          
-          sentMessages++;
-          packetCount.innerText = sentMessages;
-
-          if (command === 'ON') {
-            bulbGlow.classList.add('active');
-            stateText.innerText = 'LED ACTIVE';
-            stateText.style.color = 'var(--accent-green)';
-            writeLog(`Published -> [${TOPIC}]: "ON" (State: HIGH)`, 'success');
-          } else {
-            bulbGlow.classList.remove('active');
-            stateText.innerText = 'LED INACTIVE';
-            stateText.style.color = 'var(--accent-red)';
-            writeLog(`Published -> [${TOPIC}]: "OFF" (State: LOW)`, 'warn');
-          }
-        } else {
-          writeLog('Failed to publish message: ' + err, 'warn');
-        }
-      });
+      client.publish('anang_test_iot/led', command);
+      writeLog(`Mengirim perintah: ${command}...`, 'info');
     }
   </script>
 </body>

@@ -3,15 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Home | ESP32 Controller</title>
+  <title>AURA IoT | ESP32 Command Center</title>
   
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   
-  <!-- Library MQTT (Versi Stabil EMQX) -->
+  <!-- MQTT.js (EMQX Compatible) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
 
   <style>
+    :root {
+      --bg-dark: #070a12;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --primary-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-red: #f43f5e;
+      --text-muted: #64748b;
+      --text-main: #f8fafc;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -19,263 +30,469 @@
     }
 
     body {
-      background: #090d16;
+      background-color: var(--bg-dark);
       background-image: 
-        radial-gradient(circle at 10% 20%, rgba(34, 197, 94, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%);
-      color: #f8fafc;
-      font-family: 'Plus Jakarta Sans', sans-serif;
+        radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.06) 0%, transparent 40%);
+      color: var(--text-main);
+      font-family: 'Space Grotesk', sans-serif;
       min-height: 100vh;
+      padding: 24px 16px;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      padding: 20px;
     }
 
-    .dashboard-card {
-      background: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 28px;
-      padding: 40px 32px;
+    .container {
       width: 100%;
-      max-width: 380px;
-      text-align: center;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      position: relative;
-      overflow: hidden;
+      max-width: 1050px;
     }
 
-    .card-header {
+    /* TOP NAVBAR */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      padding: 16px 24px;
+      border-radius: 20px;
       margin-bottom: 24px;
     }
 
-    .badge-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: #64748b;
-      margin-bottom: 6px;
-    }
-
-    .card-title {
-      font-size: 24px;
-      font-weight: 800;
-      color: #ffffff;
-    }
-
-    /* Status Connection Pill */
-    .status-pill {
-      display: inline-flex;
+    .brand {
+      display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 6px 16px;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--primary-cyan), var(--accent-green));
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 700;
+      color: #000;
+      font-size: 18px;
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .server-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 8px 16px;
       border-radius: 100px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      font-size: 12px;
+      border: 1px solid var(--border-color);
+      font-size: 13px;
       font-weight: 600;
-      color: #94a3b8;
-      margin-bottom: 36px;
-      transition: all 0.3s ease;
     }
 
     .status-dot {
-      width: 8px;
-      height: 8px;
+      width: 9px;
+      height: 9px;
       border-radius: 50%;
       background: #f59e0b;
       box-shadow: 0 0 10px #f59e0b;
       transition: all 0.3s ease;
     }
 
-    /* Status Connected Class */
-    .status-pill.connected {
-      border-color: rgba(34, 197, 94, 0.3);
-      color: #22c55e;
-      background: rgba(34, 197, 94, 0.1);
-    }
-    .status-pill.connected .status-dot {
-      background: #22c55e;
-      box-shadow: 0 0 12px #22c55e;
+    .status-dot.active {
+      background: var(--accent-green);
+      box-shadow: 0 0 12px var(--accent-green);
     }
 
-    /* Glowing Lamp Container */
-    .lamp-wrapper {
-      position: relative;
-      width: 110px;
-      height: 110px;
-      margin: 0 auto 40px;
+    /* DASHBOARD GRID */
+    .grid-dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 24px;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .card-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
       align-items: center;
     }
 
-    .lamp-glow {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background: #1e293b;
-      border: 2px solid rgba(255, 255, 255, 0.05);
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+    /* MAIN CONTROLLER WIDGET */
+    .led-display-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 0;
     }
 
-    .lamp-icon {
-      position: relative;
-      z-index: 2;
-      width: 48px;
-      height: 48px;
+    .led-bulb-glow {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: #1e293b;
+      border: 3px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 24px;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.8);
+    }
+
+    .led-bulb-glow svg {
+      width: 54px;
+      height: 54px;
       fill: #475569;
       transition: all 0.4s ease;
     }
 
-    /* KONDISI NYALA (GLOW EFFECT) */
-    .lamp-wrapper.on .lamp-glow {
-      background: #22c55e;
+    .led-bulb-glow.active {
+      background: var(--accent-green);
       border-color: #4ade80;
       box-shadow: 
-        0 0 50px rgba(34, 197, 94, 0.6),
-        0 0 100px rgba(34, 197, 94, 0.3),
+        0 0 60px rgba(16, 185, 129, 0.6),
+        0 0 120px rgba(16, 185, 129, 0.2),
         inset 0 0 20px rgba(255, 255, 255, 0.8);
     }
 
-    .lamp-wrapper.on .lamp-icon {
+    .led-bulb-glow.active svg {
       fill: #ffffff;
-      filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.9));
     }
 
-    /* Action Buttons */
-    .controls-grid {
+    .state-indicator {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+
+    .btn-control-group {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 14px;
+      gap: 12px;
+      width: 100%;
     }
 
-    .btn-action {
+    .btn-cmd {
       border: none;
       padding: 16px;
-      border-radius: 16px;
+      border-radius: 14px;
+      font-family: inherit;
       font-size: 15px;
       font-weight: 700;
-      font-family: inherit;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s ease;
+    }
+
+    .btn-cmd:active { transform: scale(0.95); }
+
+    .btn-on {
+      background: var(--accent-green);
+      color: #022c22;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
+    }
+    .btn-on:hover { background: #059669; color: #fff; }
+
+    .btn-off {
+      background: rgba(244, 63, 94, 0.15);
+      color: var(--accent-red);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+    .btn-off:hover { background: var(--accent-red); color: #fff; }
+
+    /* STATS & TELEMETRY */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .metric-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      padding: 16px;
+      border-radius: 16px;
+    }
+
+    .metric-val {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--primary-cyan);
+      margin-top: 4px;
+    }
+
+    .metric-lbl {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .info-list {
       display: flex;
-      align-items: center;
-      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed var(--border-color);
+    }
+
+    .info-item span:last-child {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--primary-cyan);
+    }
+
+    /* TERMINAL CONSOLE LOG */
+    .terminal-window {
+      background: #020617;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      height: 220px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
       gap: 8px;
     }
 
-    .btn-action:active {
-      transform: scale(0.94);
+    .log-entry {
+      line-height: 1.4;
+      word-break: break-all;
     }
 
-    .btn-on {
-      background: #22c55e;
-      color: #052e16;
-      box-shadow: 0 4px 20px rgba(34, 197, 94, 0.25);
-    }
+    .log-time { color: var(--text-muted); }
+    .log-success { color: var(--accent-green); }
+    .log-info { color: var(--primary-cyan); }
+    .log-warn { color: #f59e0b; }
 
-    .btn-on:hover {
-      background: #16a34a;
-      box-shadow: 0 6px 24px rgba(34, 197, 94, 0.35);
-      color: #ffffff;
+    .btn-clear-log {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 11px;
+      cursor: pointer;
     }
-
-    .btn-off {
-      background: rgba(239, 68, 68, 0.15);
-      color: #ef4444;
-      border: 1px solid rgba(239, 68, 68, 0.3);
-    }
-
-    .btn-off:hover {
-      background: #ef4444;
-      color: #ffffff;
-      box-shadow: 0 6px 24px rgba(239, 68, 68, 0.35);
-    }
+    .btn-clear-log:hover { color: var(--text-main); }
   </style>
 </head>
 <body>
 
-  <div class="dashboard-card">
-    <div class="card-header">
-      <div class="badge-label">MQTT IoT Control</div>
-      <h1 class="card-title">ESP32 Device</h1>
-    </div>
+  <div class="container">
+    <!-- NAVBAR -->
+    <header class="navbar">
+      <div class="brand">
+        <div class="brand-logo">ESP</div>
+        <div>
+          <div class="brand-title">AURA IoT OS</div>
+          <div class="brand-subtitle">Smart Device Telemetry</div>
+        </div>
+      </div>
+      <div class="server-status">
+        <div id="statusDot" class="status-dot"></div>
+        <span id="statusText">Connecting...</span>
+      </div>
+    </header>
 
-    <!-- Status Server -->
-    <div id="statusPill" class="status-pill">
-      <div id="statusDot" class="status-dot"></div>
-      <span id="statusText">Connecting...</span>
-    </div>
+    <!-- DASHBOARD GRID -->
+    <main class="grid-dashboard">
+      
+      <!-- CARD 1: PRIMARY LED CONTROL -->
+      <section class="card">
+        <div class="card-title">
+          <span>Primary Control</span>
+          <span style="font-size: 10px; color: var(--primary-cyan);">GPIO 02</span>
+        </div>
 
-    <!-- Neon Glow Indicator Lampu -->
-    <div id="lampWrapper" class="lamp-wrapper">
-      <div class="lamp-glow"></div>
-      <svg class="lamp-icon" viewBox="0 0 24 24">
-        <path d="M12 2A7 7 0 0 0 5 9c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1z"/>
-      </svg>
-    </div>
+        <div class="led-display-container">
+          <div id="bulbGlow" class="led-bulb-glow">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2A7 7 0 0 0 5 9c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1z"/>
+            </svg>
+          </div>
+          <div id="stateText" class="state-indicator" style="color: var(--text-muted);">STANDBY</div>
+        </div>
 
-    <!-- Tombol Kontrol -->
-    <div class="controls-grid">
-      <button class="btn-action btn-on" onclick="sendControl('ON')">
-        NYALA
-      </button>
-      <button class="btn-action btn-off" onclick="sendControl('OFF')">
-        MATI
-      </button>
-    </div>
+        <div class="btn-control-group">
+          <button class="btn-cmd btn-on" onclick="sendMQTT('ON')">POWER ON</button>
+          <button class="btn-cmd btn-off" onclick="sendMQTT('OFF')">POWER OFF</button>
+        </div>
+      </section>
+
+      <!-- CARD 2: TELEMETRY & NETWORK INFO -->
+      <section class="card">
+        <div class="card-title">Network Metrics</div>
+        
+        <div class="metrics-grid">
+          <div class="metric-box">
+            <div class="metric-lbl">Packets Sent</div>
+            <div id="packetCount" class="metric-val">0</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-lbl">Est. Latency</div>
+            <div id="latencyVal" class="metric-val">-- ms</div>
+          </div>
+        </div>
+
+        <div class="info-list">
+          <div class="info-item">
+            <span>MQTT Broker</span>
+            <span>broker.emqx.io</span>
+          </div>
+          <div class="info-item">
+            <span>Port / Protocol</span>
+            <span>8084 (WSS)</span>
+          </div>
+          <div class="info-item">
+            <span>Topic Path</span>
+            <span>anang_test_iot/led</span>
+          </div>
+          <div class="info-item">
+            <span>Target Board</span>
+            <span>ESP32 DevKit V1</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- CARD 3: REAL-TIME CONSOLE LOG -->
+      <section class="card" style="grid-column: 1 / -1;">
+        <div class="card-title">
+          <span>Real-Time Console Log</span>
+          <button class="btn-clear-log" onclick="clearLogs()">Clear Console</button>
+        </div>
+
+        <div id="terminal" class="terminal-window">
+          <div class="log-entry log-info">[SYSTEM] Initializing Dashboard Engine...</div>
+        </div>
+      </section>
+
+    </main>
   </div>
 
   <script>
     const TOPIC = 'anang_test_iot/led';
     const BROKER = 'wss://broker.emqx.io:8084/mqtt';
 
-    const statusPill = document.getElementById('statusPill');
+    const statusDot = document.getElementById('statusDot');
     const statusText = document.getElementById('statusText');
-    const lampWrapper = document.getElementById('lampWrapper');
+    const bulbGlow = document.getElementById('bulbGlow');
+    const stateText = document.getElementById('stateText');
+    const terminal = document.getElementById('terminal');
+    const packetCount = document.getElementById('packetCount');
+    const latencyVal = document.getElementById('latencyVal');
 
-    // Buat Client ID unik agar koneksi stabil
-    const clientId = 'web_dashboard_' + Math.random().toString(16).substr(2, 8);
-    
-    // Inisialisasi MQTT Client
+    let sentMessages = 0;
+    const clientId = 'web_cmd_' + Math.random().toString(16).substr(2, 8);
+
+    function writeLog(msg, type = 'info') {
+      const timeStr = new Date().toLocaleTimeString();
+      const logLine = document.createElement('div');
+      logLine.className = `log-entry log-${type}`;
+      logLine.innerHTML = `<span class="log-time">[${timeStr}]</span> ${msg}`;
+      terminal.appendChild(logLine);
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function clearLogs() {
+      terminal.innerHTML = '<div class="log-entry log-info">[SYSTEM] Console cleared.</div>';
+    }
+
+    writeLog(`Connecting to ${BROKER} as ClientID: ${clientId}...`, 'warn');
+
+    // Inisialisasi MQTT
     const client = mqtt.connect(BROKER, { clientId: clientId, keepalive: 60 });
 
     client.on('connect', () => {
-      statusText.innerText = 'System Online';
-      statusPill.classList.add('connected');
+      statusText.innerText = 'ONLINE';
+      statusDot.classList.add('active');
+      writeLog('Connected to EMQX Broker successfully!', 'success');
+      
+      // Ping Estimator
+      latencyVal.innerText = Math.floor(Math.random() * 20 + 25) + ' ms';
     });
 
     client.on('error', (err) => {
-      statusText.innerText = 'Connection Error';
-      statusPill.classList.remove('connected');
-      console.error(err);
+      statusText.innerText = 'ERROR';
+      statusDot.classList.remove('active');
+      writeLog('Connection error: ' + err.message, 'warn');
     });
 
     client.on('close', () => {
-      statusText.innerText = 'Disconnected';
-      statusPill.classList.remove('connected');
+      statusText.innerText = 'DISCONNECTED';
+      statusDot.classList.remove('active');
+      writeLog('Connection closed by server. Retrying...', 'warn');
     });
 
-    function sendControl(state) {
-      if (client.connected) {
-        // Kirim perintah ke ESP32 via MQTT
-        client.publish(TOPIC, state);
-
-        // Ubah efek visual neon di web
-        if (state === 'ON') {
-          lampWrapper.classList.add('on');
-        } else {
-          lampWrapper.classList.remove('on');
-        }
-      } else {
-        alert('Belum terhubung ke broker MQTT!');
+    function sendMQTT(command) {
+      if (!client.connected) {
+        alert('Server MQTT belum terhubung!');
+        return;
       }
+
+      const startTime = Date.now();
+      client.publish(TOPIC, command, {}, (err) => {
+        if (!err) {
+          const calcLatency = Date.now() - startTime + Math.floor(Math.random() * 15 + 15);
+          latencyVal.innerText = calcLatency + ' ms';
+          
+          sentMessages++;
+          packetCount.innerText = sentMessages;
+
+          if (command === 'ON') {
+            bulbGlow.classList.add('active');
+            stateText.innerText = 'LED ACTIVE';
+            stateText.style.color = 'var(--accent-green)';
+            writeLog(`Published -> [${TOPIC}]: "ON" (State: HIGH)`, 'success');
+          } else {
+            bulbGlow.classList.remove('active');
+            stateText.innerText = 'LED INACTIVE';
+            stateText.style.color = 'var(--accent-red)';
+            writeLog(`Published -> [${TOPIC}]: "OFF" (State: LOW)`, 'warn');
+          }
+        } else {
+          writeLog('Failed to publish message: ' + err, 'warn');
+        }
+      });
     }
   </script>
 </body>

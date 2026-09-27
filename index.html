@@ -110,7 +110,52 @@
     </p>
   </div>
 </div>
+// --- LOGIC AUTHENTICATION ---
+const DEFAULT_USER = 'admin';
+const DEFAULT_PASS = 'admin123';
 
+// Update event listener saat dokumen dimuat
+window.addEventListener('DOMContentLoaded', () => {
+  checkAuth();
+  initClock();
+  initChart();
+});
+
+// Cek apakah user sudah pernah login
+function checkAuth() {
+  const isLoggedIn = sessionStorage.getItem('nexus_is_logged_in');
+  const loginScreen = document.getElementById('loginScreen');
+
+  if (isLoggedIn === 'true') {
+    loginScreen.classList.add('hidden');
+    loadDevices();
+    connectMQTT();
+  } else {
+    loginScreen.classList.remove('hidden');
+  }
+}
+
+// Proses submit form login
+function handleLogin(e) {
+  e.preventDefault();
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value.trim();
+  const errorEl = document.getElementById('loginError');
+
+  if (user === DEFAULT_USER && pass === DEFAULT_PASS) {
+    sessionStorage.setItem('nexus_is_logged_in', 'true');
+    errorEl.classList.add('hidden');
+    checkAuth();
+  } else {
+    errorEl.classList.remove('hidden');
+  }
+}
+
+// Proses logout
+function handleLogout() {
+  sessionStorage.removeItem('nexus_is_logged_in');
+  location.reload();
+}
 
 
 
@@ -140,6 +185,9 @@
         <i class="ph ph-gear text-xl mr-3"></i> Setting MQTT
       </button>
     </nav>
+	  <button onclick="handleLogout()" class="w-full flex items-center px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 text-left transition-colors">
+  <i class="ph ph-sign-out text-xl mr-3"></i> Keluar
+</button>
     <div class="p-6">
       <div class="glass-panel rounded-xl p-4 text-sm border border-white/5 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-neonblue to-neonpurple opacity-50"></div>

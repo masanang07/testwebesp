@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nexus Smart Home Dashboard</title>
-  
+
+  <!-- External Libraries -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -14,12 +15,10 @@
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { poppins: ['Poppins', 'sans-serif'] },
           colors: {
-            darkbg: '#050509',
-            panel: '#10111a',
             neonblue: '#00f0ff',
-            neonpurple: '#8a2be2',
+            darkbg: '#050509',
+            cardbg: 'rgba(16, 17, 26, 0.6)'
           }
         }
       }
@@ -28,151 +27,128 @@
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    
+    body { 
+      font-family: 'Poppins', sans-serif; 
+      background-color: #050509; 
+      color: #ffffff; 
+      overflow-x: hidden; 
+    }
 
-    body { font-family: 'Poppins', sans-serif; background-color: #050509; color: #ffffff; overflow-x: hidden; }
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: #050509; }
     ::-webkit-scrollbar-thumb { background: #1a1c29; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #2a2d42; }
-
-    .glass-panel {
-      background: rgba(16, 17, 26, 0.6);
-      backdrop-filter: blur(12px);
+    ::-webkit-scrollbar-thumb:hover { background: #00f0ff; }
+    
+    .glass-panel { 
+      background: rgba(16, 17, 26, 0.6); 
+      backdrop-filter: blur(12px); 
       -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.05); 
     }
 
     .text-glow { text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
-    .box-glow { box-shadow: 0 0 20px rgba(0, 240, 255, 0.15), inset 0 0 15px rgba(0, 240, 255, 0.05); border-color: rgba(0, 240, 255, 0.3) !important; }
+    .box-glow { box-shadow: 0 0 20px rgba(0, 240, 255, 0.15); border-color: rgba(0, 240, 255, 0.3) !important; }
     .icon-glow { filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.8)); color: #00f0ff !important; }
 
-    .toggle-checkbox:checked { right: 0; border-color: #00f0ff; }
-    .toggle-checkbox:checked + .toggle-label { background-color: rgba(0, 240, 255, 0.2); border-color: #00f0ff; box-shadow: 0 0 15px rgba(0, 240, 255, 0.4); }
-    .toggle-checkbox:checked + .toggle-label:after { transform: translateX(100%); background-color: #00f0ff; box-shadow: 0 0 10px #00f0ff; }
-    
-    .toggle-label {
-      width: 50px; height: 26px; background-color: #1a1c29; border: 1px solid rgba(255,255,255,0.2); 
-      border-radius: 9999px; position: relative; cursor: pointer; transition: all 0.3s ease;
+    /* Custom Toggle Switch */
+    .toggle-checkbox:checked + .toggle-label { 
+      background-color: rgba(0, 240, 255, 0.2); 
+      border-color: #00f0ff; 
     }
-    .toggle-label:after {
-      content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; 
-      background-color: #6b7280; border-radius: 50%; transition: all 0.3s ease;
+    .toggle-checkbox:checked + .toggle-label:after { 
+      transform: translateX(100%); 
+      background-color: #00f0ff; 
+      box-shadow: 0 0 10px #00f0ff;
+    }
+    .toggle-label { 
+      width: 50px; 
+      height: 26px; 
+      background-color: #1a1c29; 
+      border: 1px solid rgba(255,255,255,0.2); 
+      border-radius: 9999px; 
+      position: relative; 
+      cursor: pointer; 
+      transition: all 0.3s ease; 
+    }
+    .toggle-label:after { 
+      content: ''; 
+      position: absolute; 
+      top: 2px; 
+      left: 2px; 
+      width: 20px; 
+      height: 20px; 
+      background-color: #6b7280; 
+      border-radius: 50%; 
+      transition: all 0.3s ease; 
     }
 
+    /* Animations */
     @keyframes spin-slow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .spin-slow { animation: spin-slow 3s linear infinite; }
     .spin-med { animation: spin-slow 1.5s linear infinite; }
     .spin-fast { animation: spin-slow 0.6s linear infinite; }
 
-    @keyframes pulse-dot {
-      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 100, 0.7); }
-      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 255, 100, 0); }
-      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 100, 0); }
-    }
-    .status-dot.online { background-color: #00ff66; animation: pulse-dot 2s infinite; }
+    /* Status Dot Pulse */
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .status-dot.online { background-color: #00ff66; box-shadow: 0 0 10px #00ff66; }
     .status-dot.offline { background-color: #ff3333; box-shadow: 0 0 10px #ff3333; }
     .status-dot.demo { background-color: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
   </style>
 </head>
-<body class="flex h-screen antialiased selection:bg-neonblue selection:text-black">
-	<!-- Overlay Halaman Login -->
-<div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#050509] p-4">
-  <div class="glass-panel p-8 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl space-y-6">
-    <div class="text-center space-y-2">
-      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-400/10 text-cyan-400 mb-2 border border-cyan-400/30">
-        <i class="ph-fill ph-hexagon text-4xl icon-glow"></i>
+<body class="flex h-screen antialiased bg-[#050509]">
+
+  <!-- ==================== OVERLAY LOGIN SCREEN ==================== -->
+  <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#050509] p-4">
+    <div class="glass-panel p-8 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl space-y-6">
+      <div class="text-center space-y-2">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-400/10 text-cyan-400 mb-2 border border-cyan-400/30">
+          <i class="ph-fill ph-hexagon text-4xl icon-glow"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-white tracking-wide">NEXUS DASHBOARD</h2>
+        <p class="text-xs text-gray-400">Silakan masuk untuk mengakses sistem IoT</p>
       </div>
-      <h2 class="text-2xl font-bold text-white tracking-wide">NEXUS DASHBOARD</h2>
-      <p class="text-xs text-gray-400">Silakan masuk untuk mengakses sistem IoT</p>
+
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Username</label>
+          <input type="text" id="loginUser" required placeholder="Masukkan username" class="w-full bg-gray-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-400 transition-colors">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Password</label>
+          <input type="password" id="loginPass" required placeholder="Masukkan password" class="w-full bg-gray-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-400 transition-colors">
+        </div>
+
+        <div id="loginError" class="text-red-400 text-xs hidden text-center font-medium bg-red-500/10 py-2 rounded-lg border border-red-500/20">
+          Username atau password salah!
+        </div>
+
+        <button type="submit" class="w-full bg-gradient-to-r from-cyan-400 to-purple-600 text-black font-semibold text-sm py-3 rounded-xl hover:opacity-90 transition-opacity">
+          Masuk
+        </button>
+      </form>
+
+      <p class="text-[11px] text-center text-gray-500">
+        Default Login: <code class="text-cyan-400">admin</code> | Pass: <code class="text-cyan-400">admin123</code>
+      </p>
     </div>
-
-    <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
-      <div>
-        <label class="block text-xs font-medium text-gray-400 mb-1">Username</label>
-        <input type="text" id="loginUser" required placeholder="Masukkan username" class="w-full bg-gray-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-400 transition-colors">
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-400 mb-1">Password</label>
-        <input type="password" id="loginPass" required placeholder="Masukkan password" class="w-full bg-gray-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-400 transition-colors">
-      </div>
-
-      <div id="loginError" class="text-red-400 text-xs hidden text-center font-medium bg-red-500/10 py-2 rounded-lg border border-red-500/20">
-        Username atau password salah!
-      </div>
-
-      <button type="submit" class="w-full bg-gradient-to-r from-cyan-400 to-purple-600 text-black font-semibold text-sm py-3 rounded-xl hover:opacity-90 transition-opacity">
-        Masuk
-      </button>
-    </form>
-
-    <p class="text-[11px] text-center text-gray-500">
-      Default: Username <code class="text-cyan-400">admin</code> | Password <code class="text-cyan-400">admin123</code>
-    </p>
   </div>
-</div>
-// --- LOGIC AUTHENTICATION ---
-const DEFAULT_USER = 'admin';
-const DEFAULT_PASS = 'admin123';
 
-// Update event listener saat dokumen dimuat
-window.addEventListener('DOMContentLoaded', () => {
-  checkAuth();
-  initClock();
-  initChart();
-});
+  <!-- Sidebar Overlay Mobile -->
+  <div id="sidebarOverlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/70 z-40 hidden md:hidden"></div>
 
-// Cek apakah user sudah pernah login
-function checkAuth() {
-  const isLoggedIn = sessionStorage.getItem('nexus_is_logged_in');
-  const loginScreen = document.getElementById('loginScreen');
-
-  if (isLoggedIn === 'true') {
-    loginScreen.classList.add('hidden');
-    loadDevices();
-    connectMQTT();
-  } else {
-    loginScreen.classList.remove('hidden');
-  }
-}
-
-// Proses submit form login
-function handleLogin(e) {
-  e.preventDefault();
-  const user = document.getElementById('loginUser').value.trim();
-  const pass = document.getElementById('loginPass').value.trim();
-  const errorEl = document.getElementById('loginError');
-
-  if (user === DEFAULT_USER && pass === DEFAULT_PASS) {
-    sessionStorage.setItem('nexus_is_logged_in', 'true');
-    errorEl.classList.add('hidden');
-    checkAuth();
-  } else {
-    errorEl.classList.remove('hidden');
-  }
-}
-
-// Proses logout
-function handleLogout() {
-  sessionStorage.removeItem('nexus_is_logged_in');
-  location.reload();
-}
-
-
-
-  <div id="sidebarOverlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/70 z-40 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
-
-  <aside id="sidebar" class="w-64 glass-panel border-r border-white/5 flex flex-col fixed md:relative inset-y-0 left-0 z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+  <!-- ==================== SIDEBAR ==================== -->
+  <aside id="sidebar" class="w-64 glass-panel border-r border-white/5 flex flex-col fixed md:relative inset-y-0 left-0 z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
     <div class="h-20 flex items-center justify-between px-8 border-b border-white/5">
       <div class="flex items-center">
-        <i class="ph-fill ph-hexagon text-3xl text-neonblue mr-3 icon-glow"></i>
-        <h1 class="text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-neonblue to-neonpurple">NEXUS</h1>
+        <i class="ph-fill ph-hexagon text-3xl text-cyan-400 mr-3 icon-glow"></i>
+        <h1 class="text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">NEXUS</h1>
       </div>
-      <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-400 hover:text-white">
-        <i class="ph ph-x text-2xl"></i>
-      </button>
+      <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-400"><i class="ph ph-x text-2xl"></i></button>
     </div>
+    
     <nav class="flex-1 px-4 py-6 space-y-2">
-      <a href="#" class="flex items-center px-4 py-3 rounded-xl bg-gradient-to-r from-neonblue/10 to-transparent border border-neonblue/20 text-neonblue text-glow">
+      <a href="#" class="flex items-center px-4 py-3 rounded-xl bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 text-glow">
         <i class="ph ph-squares-four text-xl mr-3"></i> Dashboard
       </a>
       <a href="#devicesSection" class="flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
@@ -184,85 +160,94 @@ function handleLogout() {
       <button onclick="openMqttModal()" class="w-full flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors text-left">
         <i class="ph ph-gear text-xl mr-3"></i> Setting MQTT
       </button>
+      <button onclick="handleLogout()" class="w-full flex items-center px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 text-left transition-colors">
+        <i class="ph ph-sign-out text-xl mr-3"></i> Keluar
+      </button>
     </nav>
-	  <button onclick="handleLogout()" class="w-full flex items-center px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 text-left transition-colors">
-  <i class="ph ph-sign-out text-xl mr-3"></i> Keluar
-</button>
-    <div class="p-6">
-      <div class="glass-panel rounded-xl p-4 text-sm border border-white/5 relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-neonblue to-neonpurple opacity-50"></div>
-        <p class="text-gray-400 mb-1">Status Sistem</p>
-        <p id="systemStatusText" class="text-green-400 font-semibold flex items-center"><i class="ph ph-check-circle mr-2"></i> Sistem Normal</p>
-      </div>
+
+    <div class="p-4 border-t border-white/5 text-xs text-gray-500 text-center">
+      Nexus IoT Dashboard v2.0
     </div>
   </aside>
 
+  <!-- ==================== MAIN CONTENT ==================== -->
   <main class="flex-1 flex flex-col relative z-10 overflow-y-auto">
+    <!-- Header Navbar -->
     <header class="h-20 glass-panel border-b border-white/5 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30">
       <div class="flex items-center">
-        <button onclick="toggleMobileSidebar()" class="mr-4 md:hidden text-gray-300 hover:text-white focus:outline-none">
+        <button onclick="toggleMobileSidebar()" class="mr-4 md:hidden text-gray-300 hover:text-white">
           <i class="ph ph-list text-2xl"></i>
         </button>
         <div>
-          <h2 class="text-lg font-medium text-gray-200"><span id="greetingText">Selamat Datang</span>, <span class="text-white font-semibold">Anang Apri</span></h2>
-          <p id="liveClock" class="text-xs text-neonblue font-mono">00:00:00 WIB</p>
+          <h2 class="text-lg font-medium text-gray-200">
+            <span id="greetingText">Selamat Datang</span>, <span class="text-white font-semibold">Anang Apri</span>
+          </h2>
+          <p id="liveClock" class="text-xs text-cyan-400 font-mono">00:00:00 WIB</p>
         </div>
       </div>
 
-      <div class="flex items-center space-x-4">
-        <button onclick="openMqttModal()" class="flex items-center glass-panel px-4 py-2 rounded-full border border-white/10 hover:border-neonblue/40 transition-colors">
-          <div id="statusDot" class="w-2.5 h-2.5 rounded-full status-dot offline mr-3"></div>
+      <div class="flex items-center space-x-3">
+        <!-- Status Indicator Button -->
+        <button onclick="openMqttModal()" class="flex items-center glass-panel px-4 py-2 rounded-full border border-white/10 hover:border-cyan-400/40 transition-colors">
+          <div id="statusDot" class="status-dot offline mr-2.5"></div>
           <span id="statusText" class="text-xs md:text-sm font-medium text-gray-300">Connecting...</span>
         </button>
 
-        <button onclick="openAddDeviceModal()" class="hidden sm:flex items-center bg-gradient-to-r from-neonblue to-neonpurple text-black font-semibold text-xs px-4 py-2.5 rounded-full hover:opacity-90 transition-opacity">
+        <!-- Tambah Alat Button -->
+        <button onclick="openAddDeviceModal()" class="flex items-center bg-gradient-to-r from-cyan-400 to-purple-600 text-black font-semibold text-xs px-4 py-2.5 rounded-full hover:opacity-90 transition-opacity shadow-lg shadow-cyan-500/20">
           <i class="ph ph-plus-circle text-lg mr-1.5"></i> Tambah Alat
         </button>
-
-        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-neonpurple to-neonblue p-0.5 shadow-[0_0_15px_rgba(138,43,226,0.3)]">
-          <div class="w-full h-full bg-panel rounded-full flex items-center justify-center overflow-hidden">
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Anang&backgroundColor=transparent" alt="Avatar" class="w-full h-full object-cover">
-          </div>
-        </div>
       </div>
     </header>
 
+    <!-- Content Body -->
     <div class="p-6 lg:p-10 space-y-8">
+      
+      <!-- Metrics Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="glass-panel p-6 rounded-2xl border border-white/5 flex items-center justify-between">
+        <div class="glass-panel p-6 rounded-2xl flex items-center justify-between">
           <div>
             <p class="text-gray-400 text-sm mb-1">Perangkat Aktif</p>
-            <h3 class="text-2xl font-bold text-white"><span id="activeDevicesCount">0</span> <span id="totalDevicesCount" class="text-sm text-gray-500 font-normal">/ 0 Total</span></h3>
+            <h3 class="text-2xl font-bold text-white">
+              <span id="activeDevicesCount">0</span> 
+              <span id="totalDevicesCount" class="text-sm text-gray-500 font-normal">/ 0 Total</span>
+            </h3>
           </div>
-          <div class="w-12 h-12 rounded-full bg-neonpurple/10 flex items-center justify-center text-neonpurple">
+          <div class="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400">
             <i class="ph ph-power text-2xl"></i>
           </div>
         </div>
 
-        <div class="glass-panel p-6 rounded-2xl border border-white/5 flex items-center justify-between">
+        <div class="glass-panel p-6 rounded-2xl flex items-center justify-between">
           <div>
             <p class="text-gray-400 text-sm mb-1">Total Daya Saat Ini</p>
-            <h3 class="text-2xl font-bold text-white"><span id="activeWattage">0</span> <span class="text-sm text-neonblue font-normal">Watt</span></h3>
+            <h3 class="text-2xl font-bold text-white">
+              <span id="activeWattage">0</span> <span class="text-sm text-cyan-400 font-normal">Watt</span>
+            </h3>
           </div>
-          <div class="w-12 h-12 rounded-full bg-neonblue/10 flex items-center justify-center text-neonblue">
+          <div class="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400">
             <i class="ph ph-lightning text-2xl"></i>
           </div>
         </div>
 
-        <div class="glass-panel p-6 rounded-2xl border border-white/5 flex items-center justify-between">
+        <div class="glass-panel p-6 rounded-2xl flex items-center justify-between">
           <div>
             <p class="text-gray-400 text-sm mb-1">Suhu Ruangan</p>
-            <h3 class="text-2xl font-bold text-white"><span id="currentTemp">27.5</span> <span class="text-sm text-amber-400 font-normal">°C</span></h3>
+            <h3 class="text-2xl font-bold text-white">
+              <span id="currentTemp">27.5</span> <span class="text-sm text-amber-400 font-normal">°C</span>
+            </h3>
           </div>
           <div class="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400">
             <i class="ph ph-thermometer-simple text-2xl"></i>
           </div>
         </div>
 
-        <div class="glass-panel p-6 rounded-2xl border border-white/5 flex items-center justify-between">
+        <div class="glass-panel p-6 rounded-2xl flex items-center justify-between">
           <div>
             <p class="text-gray-400 text-sm mb-1">Kelembaban</p>
-            <h3 class="text-2xl font-bold text-white"><span id="currentHum">65</span> <span class="text-sm text-green-400 font-normal">%</span></h3>
+            <h3 class="text-2xl font-bold text-white">
+              <span id="currentHum">65</span> <span class="text-sm text-green-400 font-normal">%</span>
+            </h3>
           </div>
           <div class="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center text-green-400">
             <i class="ph ph-drop text-2xl"></i>
@@ -270,130 +255,152 @@ function handleLogout() {
         </div>
       </div>
 
-      <div id="telemetrySection" class="glass-panel p-6 rounded-2xl border border-white/5">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+      <!-- Telemetry Chart Section -->
+      <div id="telemetrySection" class="glass-panel p-6 rounded-2xl">
+        <div class="flex justify-between items-center mb-6">
           <div>
-            <h3 class="text-lg font-semibold text-white">Telemetri Sensor Real-Time (DHT11/DHT22)</h3>
-            <p class="text-xs text-gray-400">Menerima payload JSON via topic: <code class="text-neonblue">anang_test_iot/sensor</code></p>
+            <h3 class="text-lg font-semibold text-white">Telemetri Sensor Real-Time</h3>
+            <p class="text-xs text-gray-400">Topic Sensor: <code id="displayTopicSensor" class="text-cyan-400">anang_test_iot/sensor</code></p>
           </div>
-          <div class="flex space-x-2">
-            <button onclick="simulateSensorData()" class="text-xs bg-white/5 hover:bg-white/10 text-gray-300 px-3 py-1.5 rounded-lg border border-white/10 transition-colors">
-              <i class="ph ph-arrows-clockwise mr-1"></i> Simulasi Data
-            </button>
-          </div>
+          <button onclick="simulateSensorData()" class="text-xs bg-white/5 hover:bg-white/10 text-gray-300 px-3 py-1.5 rounded-lg border border-white/10 transition-colors">
+            <i class="ph ph-arrows-clockwise mr-1"></i> Simulasi Data
+          </button>
         </div>
         <div class="h-64 w-full">
           <canvas id="sensorChart"></canvas>
         </div>
       </div>
 
+      <!-- Devices Section -->
       <div id="devicesSection" class="space-y-6">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h2 class="text-xl font-semibold text-white">Kelola Perangkat Rumah</h2>
-            <p class="text-xs text-gray-400">Tambah, edit, hapus, atau kontrol perangkat Anda secara real-time</p>
-          </div>
-          
-          <div class="flex items-center space-x-3 w-full sm:w-auto">
-            <select id="roomFilter" onchange="renderDevices()" class="bg-panel border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-neonblue">
+        <div class="flex justify-between items-center">
+          <h2 class="text-xl font-semibold text-white">Kelola Perangkat Rumah</h2>
+          <!-- Dynamic Room Filter -->
+          <div class="flex items-center space-x-2">
+            <span class="text-xs text-gray-400">Filter:</span>
+            <select id="roomFilter" onchange="renderDevices()" class="bg-gray-900 border border-white/10 rounded-xl px-4 py-2 text-xs text-gray-300 focus:outline-none focus:border-cyan-400">
               <option value="ALL">Semua Ruangan</option>
-              <option value="Ruang Tamu">Ruang Tamu</option>
-              <option value="Taman">Taman</option>
-              <option value="Kamar Utama">Kamar Utama</option>
-              <option value="Dapur">Dapur</option>
             </select>
-
-            <button onclick="openAddDeviceModal()" class="sm:hidden flex-1 bg-gradient-to-r from-neonblue to-neonpurple text-black font-semibold text-xs py-2 px-3 rounded-xl text-center">
-              + Tambah
-            </button>
           </div>
         </div>
 
+        <!-- Devices Cards Container Grid -->
         <div id="devicesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
       </div>
+
     </div>
   </main>
 
-  <div id="deviceModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden backdrop-blur-md">
-    <div class="glass-panel w-full max-w-md rounded-2xl p-6 border border-white/10 relative">
-      <button onclick="closeDeviceModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
-        <i class="ph ph-x text-2xl"></i>
-      </button>
-      
-      <h3 id="modalTitle" class="text-xl font-bold text-white mb-4">Tambah Perangkat Baru</h3>
-      
+  <!-- ==================== MODAL TAMBAH / EDIT DEVICE ==================== -->
+  <div id="deviceModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="glass-panel p-6 rounded-2xl w-full max-w-md border border-white/10 space-y-4">
+      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+        <h3 id="modalTitle" class="text-lg font-semibold text-white">Tambah Perangkat Baru</h3>
+        <button onclick="closeDeviceModal()" class="text-gray-400 hover:text-white"><i class="ph ph-x text-xl"></i></button>
+      </div>
+
       <form id="deviceForm" onsubmit="handleDeviceFormSubmit(event)" class="space-y-4">
         <input type="hidden" id="formDeviceId">
-        
         <div>
-          <label class="block text-xs text-gray-400 mb-1">Nama Perangkat</label>
-          <input type="text" id="formDeviceName" required placeholder="Contoh: Lampu Teras" class="w-full bg-panel border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-neonblue">
+          <label class="block text-xs font-medium text-gray-400 mb-1">Nama Perangkat</label>
+          <input type="text" id="formDeviceName" required placeholder="Contoh: Lampu Utama" class="w-full bg-gray-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
         </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Kategori / Tipe</label>
-            <select id="formDeviceType" class="w-full bg-panel border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-neonblue">
-              <option value="light">Lampu / LED</option>
-              <option value="fan">Kipas Angin</option>
-              <option value="ac">AC / Thermostat</option>
-              <option value="lock">Kunci Pintu Smart</option>
-              <option value="switch">Saklar Umum</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Ruangan</label>
-            <input type="text" id="formDeviceRoom" placeholder="Ruang Tamu" required class="w-full bg-panel border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-neonblue">
-          </div>
-        </div>
-
         <div>
-          <label class="block text-xs text-gray-400 mb-1">MQTT Topic Control (Pub/Sub)</label>
-          <input type="text" id="formDeviceTopic" required placeholder="anang_test_iot/lampu1" class="w-full bg-panel border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-neonblue">
+          <label class="block text-xs font-medium text-gray-400 mb-1">Jenis Perangkat</label>
+          <select id="formDeviceType" class="w-full bg-gray-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+            <option value="light">Lampu</option>
+            <option value="fan">Kipas Angin</option>
+            <option value="ac">AC</option>
+            <option value="lock">Kunci Pintu</option>
+          </select>
         </div>
-
         <div>
-          <label class="block text-xs text-gray-400 mb-1">Estimasi Daya (Watt)</label>
-          <input type="number" id="formDeviceWattage" required placeholder="10" min="0" class="w-full bg-panel border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-neonblue">
+          <label class="block text-xs font-medium text-gray-400 mb-1">Ruangan</label>
+          <input type="text" id="formDeviceRoom" required placeholder="Contoh: Ruang Tamu, Kamar Tamu" class="w-full bg-gray-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">MQTT Topic Control</label>
+          <input type="text" id="formDeviceTopic" required placeholder="Contoh: anang_test_iot/led" class="w-full bg-gray-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Konsumsi Daya (Watt)</label>
+          <input type="number" id="formDeviceWattage" required placeholder="10" class="w-full bg-gray-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
         </div>
 
-        <div class="pt-4 flex justify-end space-x-3">
-          <button type="button" onclick="closeDeviceModal()" class="px-5 py-2.5 rounded-xl border border-white/10 text-xs text-gray-300 hover:bg-white/5">Batal</button>
-          <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-neonblue to-neonpurple text-black font-semibold text-xs hover:opacity-90">Simpan Perangkat</button>
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="closeDeviceModal()" class="px-4 py-2 text-xs text-gray-400 hover:text-white bg-white/5 rounded-xl">Batal</button>
+          <button type="submit" class="px-4 py-2 text-xs bg-cyan-400 text-black font-semibold rounded-xl hover:bg-cyan-300">Simpan</button>
         </div>
       </form>
     </div>
   </div>
 
-  <div id="mqttModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden backdrop-blur-md">
-    <div class="glass-panel w-full max-w-md rounded-2xl p-6 border border-white/10 relative">
-      <button onclick="closeMqttModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
-        <i class="ph ph-x text-2xl"></i>
-      </button>
-      
-      <h3 class="text-xl font-bold text-white mb-2">Konfigurasi MQTT Broker</h3>
-      <p class="text-xs text-gray-400 mb-4">Gunakan WebSocket Port (SSL 8884 / Non-SSL 8000)</p>
+  <!-- ==================== MODAL SETTING MQTT ==================== -->
+  <div id="mqttModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="glass-panel p-6 rounded-2xl w-full max-w-md border border-white/10 space-y-4">
+      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+        <h3 class="text-lg font-semibold text-white">Konfigurasi MQTT Broker</h3>
+        <button onclick="closeMqttModal()" class="text-gray-400 hover:text-white"><i class="ph ph-x text-xl"></i></button>
+      </div>
 
-      <form id="mqttForm" onsubmit="saveMqttConfig(event)" class="space-y-4">
+      <form id="mqttForm" onsubmit="handleMqttFormSubmit(event)" class="space-y-4">
         <div>
-          <label class="block text-xs text-gray-400 mb-1">Broker URL (WebSocket)</label>
-          <input type="text" id="cfgBrokerUrl" required value="wss://broker.hivemq.com:8884/mqtt" class="w-full bg-panel border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-neonblue">
+          <label class="block text-xs font-medium text-gray-400 mb-1">WebSocket Broker URL</label>
+          <input type="text" id="mqttBrokerUrl" required placeholder="wss://broker.hivemq.com:8884/mqtt" class="w-full bg-gray-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Topic Telemetri Sensor</label>
+          <input type="text" id="mqttTopicSensor" required placeholder="anang_test_iot/sensor" class="w-full bg-gray-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
         </div>
 
-        <div>
-          <label class="block text-xs text-gray-400 mb-1">Topic Sensor (Sub)</label>
-          <input type="text" id="cfgTopicSensor" required value="anang_test_iot/sensor" class="w-full bg-panel border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-neonblue">
-        </div>
-
-        <div class="pt-4 flex justify-end space-x-3">
-          <button type="button" onclick="closeMqttModal()" class="px-5 py-2.5 rounded-xl border border-white/10 text-xs text-gray-300 hover:bg-white/5">Batal</button>
-          <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-neonblue to-neonpurple text-black font-semibold text-xs hover:opacity-90">Sambungkan Ulang</button>
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="closeMqttModal()" class="px-4 py-2 text-xs text-gray-400 hover:text-white bg-white/5 rounded-xl">Batal</button>
+          <button type="submit" class="px-4 py-2 text-xs bg-cyan-400 text-black font-semibold rounded-xl hover:bg-cyan-300">Hubungkan Ulang</button>
         </div>
       </form>
     </div>
   </div>
 
+  <!-- ==================== JAVASCRIPT SYSTEM LOGIC ==================== -->
   <script>
+    // --- AUTHENTICATION LOGIC ---
+    const DEFAULT_USER = 'admin';
+    const DEFAULT_PASS = 'admin123';
+
+    function checkAuth() {
+      const isLoggedIn = sessionStorage.getItem('nexus_is_logged_in');
+      const loginScreen = document.getElementById('loginScreen');
+
+      if (isLoggedIn === 'true') {
+        loginScreen.classList.add('hidden');
+        loadDevices();
+        connectMQTT();
+      } else {
+        loginScreen.classList.remove('hidden');
+      }
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const user = document.getElementById('loginUser').value.trim();
+      const pass = document.getElementById('loginPass').value.trim();
+      const errorEl = document.getElementById('loginError');
+
+      if (user === DEFAULT_USER && pass === DEFAULT_PASS) {
+        sessionStorage.setItem('nexus_is_logged_in', 'true');
+        errorEl.classList.add('hidden');
+        checkAuth();
+      } else {
+        errorEl.classList.remove('hidden');
+      }
+    }
+
+    function handleLogout() {
+      sessionStorage.removeItem('nexus_is_logged_in');
+      location.reload();
+    }
+
+    // --- INITIAL DATA STATE ---
     const initialDevices = [
       { id: 'dev_esp32_builtin', name: 'Main ESP32 Node', type: 'light', room: 'Ruang Tamu', topic: 'anang_test_iot/led', wattage: 5, status: false, icon: 'ph-lightbulb' },
       { id: 'dev_fan_1', name: 'Smart Kipas Angin', type: 'fan', room: 'Ruang Tamu', topic: 'anang_test_iot/fan', wattage: 35, status: false, speed: 1, icon: 'ph-wind' },
@@ -403,19 +410,20 @@ function handleLogout() {
 
     let devices = [];
     let mqttClient = null;
-    let brokerUrl = 'wss://broker.hivemq.com:8884/mqtt';
-    let topicSensor = 'anang_test_iot/sensor';
+    let brokerUrl = localStorage.getItem('nexus_mqtt_broker') || 'wss://broker.hivemq.com:8884/mqtt';
+    let topicSensor = localStorage.getItem('nexus_mqtt_sensor') || 'anang_test_iot/sensor';
     let sensorChart = null;
 
     const chartLabels = ['10:00', '10:05', '10:10', '10:15', '10:20', '10:25'];
     const tempData = [26.5, 27.0, 27.2, 26.8, 27.5, 27.5];
     const humData = [60, 62, 65, 63, 64, 65];
 
+    // --- LIFECYCLE INITIALIZATION ---
     window.addEventListener('DOMContentLoaded', () => {
-      loadDevices();
-      initChart();
+      checkAuth();
       initClock();
-      connectMQTT();
+      initChart();
+      document.getElementById('displayTopicSensor').innerText = topicSensor;
     });
 
     function toggleMobileSidebar() {
@@ -438,6 +446,7 @@ function handleLogout() {
       setInterval(update, 1000);
     }
 
+    // --- DEVICE & STORAGE MANAGEMENT ---
     function loadDevices() {
       const saved = localStorage.getItem('nexus_devices');
       if (saved) {
@@ -446,7 +455,7 @@ function handleLogout() {
         devices = [...initialDevices];
         saveDevices();
       }
-		populateRoomFilter();
+      populateRoomFilter();
       renderDevices();
     }
 
@@ -462,128 +471,155 @@ function handleLogout() {
       document.getElementById('activeWattage').innerText = activeDevs.reduce((acc, d) => acc + (d.wattage || 0), 0);
     }
 
+    // --- DYNAMIC ROOM FILTER ---
+    function populateRoomFilter() {
+      const select = document.getElementById('roomFilter');
+      if (!select) return;
+      const currentValue = select.value || 'ALL';
+
+      const uniqueRooms = Array.from(new Set(devices.map(d => d.room ? d.room.trim() : '').filter(Boolean)));
+
+      let html = `<option value="ALL">Semua Ruangan</option>`;
+      uniqueRooms.forEach(room => {
+        html += `<option value="${room}">${room}</option>`;
+      });
+
+      select.innerHTML = html;
+      if (uniqueRooms.includes(currentValue)) {
+        select.value = currentValue;
+      } else {
+        select.value = 'ALL';
+      }
+    }
+
+    // --- RENDER DEVICE CARDS (NO OVERLAP / BENTROK FIX) ---
     function renderDevices() {
-  const container = document.getElementById('devicesGrid');
-  const filter = document.getElementById('roomFilter').value;
-  container.innerHTML = '';
+      const container = document.getElementById('devicesGrid');
+      const filter = document.getElementById('roomFilter').value;
+      container.innerHTML = '';
 
-  // Filter ruangan dengan pencocokan yang akurat
-  const filtered = filter === 'ALL' 
-    ? devices 
-    : devices.filter(d => d.room && d.room.trim().toLowerCase() === filter.trim().toLowerCase());
+      const filtered = filter === 'ALL' 
+        ? devices 
+        : devices.filter(d => d.room && d.room.trim().toLowerCase() === filter.trim().toLowerCase());
 
-  if (filtered.length === 0) {
-    container.innerHTML = `<div class="col-span-full glass-panel p-8 rounded-2xl text-center text-gray-500"><i class="ph ph-devices text-4xl mb-2 text-gray-600"></i><p>Tidak ada perangkat ditemukan di ruangan ini.</p></div>`;
-    calculateStats();
-    return;
-  }
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="col-span-full glass-panel p-8 rounded-2xl text-center text-gray-500"><i class="ph ph-devices text-4xl mb-2 text-gray-600"></i><p>Tidak ada perangkat ditemukan di ruangan ini.</p></div>`;
+        calculateStats();
+        return;
+      }
 
-  filtered.forEach(device => {
-    const card = document.createElement('div');
-    card.className = `glass-panel p-6 rounded-2xl border border-white/5 transition-all duration-300 relative group ${device.status ? 'box-glow' : ''}`;
-    
-    let extraControls = '';
-    if (device.type === 'fan' && device.status) {
-      extraControls = `<div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between"><span class="text-xs text-gray-400">Kecepatan:</span><div class="flex space-x-1"><button onclick="setFanSpeed('${device.id}', 1)" class="px-2.5 py-1 text-xs rounded-lg ${device.speed === 1 ? 'bg-neonblue text-black font-bold' : 'bg-white/5 text-gray-400'}">1</button><button onclick="setFanSpeed('${device.id}', 2)" class="px-2.5 py-1 text-xs rounded-lg ${device.speed === 2 ? 'bg-neonblue text-black font-bold' : 'bg-white/5 text-gray-400'}">2</button><button onclick="setFanSpeed('${device.id}', 3)" class="px-2.5 py-1 text-xs rounded-lg ${device.speed === 3 ? 'bg-neonblue text-black font-bold' : 'bg-white/5 text-gray-400'}">3</button></div></div>`;
-    } else if (device.type === 'ac' && device.status) {
-      extraControls = `<div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between"><span class="text-xs text-gray-400">Set Suhu:</span><div class="flex items-center space-x-2"><button onclick="changeAcTemp('${device.id}', -1)" class="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center text-white font-bold hover:bg-white/20">-</button><span class="text-sm font-bold text-neonblue">${device.temp || 24}°C</span><button onclick="changeAcTemp('${device.id}', 1)" class="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center text-white font-bold hover:bg-white/20">+</button></div></div>`;
-    }
+      filtered.forEach(device => {
+        const card = document.createElement('div');
+        card.className = `glass-panel p-6 rounded-2xl border border-white/5 transition-all duration-300 relative group ${device.status ? 'box-glow' : ''}`;
 
-    let iconClass = device.icon || 'ph-power';
-    if (device.type === 'fan' && device.status) {
-      if (device.speed === 1) iconClass += ' spin-slow';
-      else if (device.speed === 2) iconClass += ' spin-med';
-      else iconClass += ' spin-fast';
-    }
+        // Extra Controls (Speed/Temp)
+        let extraControls = '';
+        if (device.type === 'fan' && device.status) {
+          extraControls = `<div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between"><span class="text-xs text-gray-400">Kecepatan:</span><div class="flex space-x-1"><button onclick="setFanSpeed('${device.id}', 1)" class="px-2.5 py-1 text-xs rounded-lg ${device.speed === 1 ? 'bg-cyan-400 text-black font-bold' : 'bg-white/5 text-gray-400'}">1</button><button onclick="setFanSpeed('${device.id}', 2)" class="px-2.5 py-1 text-xs rounded-lg ${device.speed === 2 ? 'bg-cyan-400 text-black font-bold' : 'bg-white/5 text-gray-400'}">2</button><button onclick="setFanSpeed('${device.id}', 3)" class="px-2.5 py-1 text-xs rounded-lg ${device.speed === 3 ? 'bg-cyan-400 text-black font-bold' : 'bg-white/5 text-gray-400'}">3</button></div></div>`;
+        } else if (device.type === 'ac' && device.status) {
+          extraControls = `<div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between"><span class="text-xs text-gray-400">Set Suhu:</span><div class="flex items-center space-x-2"><button onclick="changeAcTemp('${device.id}', -1)" class="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center text-white font-bold hover:bg-white/20">-</button><span class="text-sm font-bold text-cyan-400">${device.temp || 24}°C</span><button onclick="changeAcTemp('${device.id}', 1)" class="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center text-white font-bold hover:bg-white/20">+</button></div></div>`;
+        }
 
-    card.innerHTML = `
-      <div class="flex justify-between items-center mb-4">
-        <div class="w-12 h-12 rounded-xl ${device.status ? 'bg-neonblue/20' : 'bg-white/5'} flex items-center justify-center transition-all duration-300">
-          <i class="ph-fill ${iconClass} text-2xl ${device.status ? 'icon-glow' : 'text-gray-500'}"></i>
-        </div>
+        // Animated Icons
+        let iconClass = device.icon || 'ph-power';
+        if (device.type === 'fan' && device.status) {
+          if (device.speed === 1) iconClass += ' spin-slow';
+          else if (device.speed === 2) iconClass += ' spin-med';
+          else iconClass += ' spin-fast';
+        }
 
-        <div class="flex items-center space-x-2">
-          <div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button onclick="openEditDeviceModal('${device.id}')" class="p-1.5 text-gray-400 hover:text-neonblue bg-white/5 hover:bg-white/10 rounded-lg"><i class="ph ph-pencil-simple text-sm"></i></button>
-            <button onclick="deleteDevice('${device.id}')" class="p-1.5 text-gray-400 hover:text-red-400 bg-white/5 hover:bg-white/10 rounded-lg"><i class="ph ph-trash text-sm"></i></button>
+        card.innerHTML = `
+          <!-- Header Flex: Icon kiri | Action Buttons & Toggle Kanan (Rapi & Sejajar) -->
+          <div class="flex justify-between items-center mb-4">
+            <div class="w-12 h-12 rounded-xl ${device.status ? 'bg-cyan-400/20' : 'bg-white/5'} flex items-center justify-center transition-all duration-300">
+              <i class="ph-fill ${iconClass} text-2xl ${device.status ? 'icon-glow' : 'text-gray-500'}"></i>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onclick="openEditDeviceModal('${device.id}')" class="p-1.5 text-gray-400 hover:text-cyan-400 bg-white/5 hover:bg-white/10 rounded-lg"><i class="ph ph-pencil-simple text-sm"></i></button>
+                <button onclick="deleteDevice('${device.id}')" class="p-1.5 text-gray-400 hover:text-red-400 bg-white/5 hover:bg-white/10 rounded-lg"><i class="ph ph-trash text-sm"></i></button>
+              </div>
+
+              <div class="relative inline-block w-[50px] align-middle select-none">
+                <input type="checkbox" id="toggle_${device.id}" ${device.status ? 'checked' : ''} onchange="toggleDeviceStatus('${device.id}')" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 opacity-0"/>
+                <label for="toggle_${device.id}" class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer"></label>
+              </div>
+            </div>
           </div>
 
-          <div class="relative inline-block w-[50px] align-middle select-none">
-            <input type="checkbox" id="toggle_${device.id}" ${device.status ? 'checked' : ''} onchange="toggleDeviceStatus('${device.id}')" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 opacity-0"/>
-            <label for="toggle_${device.id}" class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer"></label>
+          <div>
+            <h3 class="text-base font-semibold text-white mb-0.5">${device.name}</h3>
+            <p class="text-xs text-gray-400">${device.room} • ${device.wattage || 0}W</p>
           </div>
-        </div>
-      </div>
 
-      <div>
-        <h3 class="text-base font-semibold text-white mb-0.5">${device.name}</h3>
-        <p class="text-xs text-gray-400">${device.room} • ${device.wattage || 0}W</p>
-      </div>
+          ${extraControls}
 
-      ${extraControls}
+          <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs">
+            <span class="text-gray-500 font-mono text-[10px] truncate max-w-[150px]"><i class="ph ph-broadcast mr-1"></i>${device.topic}</span>
+            <span class="font-bold ${device.status ? 'text-cyan-400 text-glow' : 'text-gray-500'}">${device.status ? 'ON' : 'OFF'}</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
 
-      <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs">
-        <span class="text-gray-500 font-mono text-[10px] truncate max-w-[150px]"><i class="ph ph-broadcast mr-1"></i>${device.topic}</span>
-        <span class="font-bold ${device.status ? 'text-neonblue text-glow' : 'text-gray-500'}">${device.status ? 'ON' : 'OFF'}</span>
-      </div>
-    `;
-    container.appendChild(card);
-  });
+      calculateStats();
+    }
 
-  calculateStats();
-}
-
-
+    // --- DEVICE CONTROL ACTIONS ---
     function toggleDeviceStatus(id) {
       const device = devices.find(d => d.id === id);
       if (!device) return;
       device.status = !device.status;
       saveDevices();
-      publishMQTT(device.topic, device.status ? 'ON' : 'OFF');
-		populateRoomFilter();
+      if (mqttClient && mqttClient.connected) {
+        mqttClient.publish(device.topic, device.status ? 'ON' : 'OFF');
+      }
       renderDevices();
     }
 
     function setFanSpeed(id, speed) {
-      const device = devices.find(d => d.id === id);
-      if (!device) return;
-      device.speed = speed;
-      saveDevices();
-      publishMQTT(device.topic, `SPEED_${speed}`);
-		populateRoomFilter();
-      renderDevices();
+      const dev = devices.find(d => d.id === id);
+      if (dev) {
+        dev.speed = speed;
+        saveDevices();
+        if (mqttClient && mqttClient.connected) {
+          mqttClient.publish(dev.topic + '/speed', speed.toString());
+        }
+        renderDevices();
+      }
     }
 
     function changeAcTemp(id, delta) {
-      const device = devices.find(d => d.id === id);
-      if (!device) return;
-      device.temp = Math.min(Math.max((device.temp || 24) + delta, 16), 30);
-      saveDevices();
-      publishMQTT(device.topic, `TEMP_${device.temp}`);
-		populateRoomFilter();
-      renderDevices();
+      const dev = devices.find(d => d.id === id);
+      if (dev) {
+        dev.temp = Math.min(30, Math.max(16, (dev.temp || 24) + delta));
+        saveDevices();
+        if (mqttClient && mqttClient.connected) {
+          mqttClient.publish(dev.topic + '/temp', dev.temp.toString());
+        }
+        renderDevices();
+      }
     }
 
+    // --- DEVICE MODAL HANDLERS ---
     function openAddDeviceModal() {
       document.getElementById('modalTitle').innerText = 'Tambah Perangkat Baru';
       document.getElementById('formDeviceId').value = '';
-      document.getElementById('formDeviceName').value = '';
-      document.getElementById('formDeviceRoom').value = '';
-      document.getElementById('formDeviceTopic').value = 'anang_test_iot/';
-      document.getElementById('formDeviceWattage').value = '10';
+      document.getElementById('deviceForm').reset();
       document.getElementById('deviceModal').classList.remove('hidden');
     }
 
     function openEditDeviceModal(id) {
-      const device = devices.find(d => d.id === id);
-      if (!device) return;
+      const dev = devices.find(d => d.id === id);
+      if (!dev) return;
       document.getElementById('modalTitle').innerText = 'Edit Perangkat';
-      document.getElementById('formDeviceId').value = device.id;
-      document.getElementById('formDeviceName').value = device.name;
-      document.getElementById('formDeviceType').value = device.type;
-      document.getElementById('formDeviceRoom').value = device.room;
-      document.getElementById('formDeviceTopic').value = device.topic;
-      document.getElementById('formDeviceWattage').value = device.wattage;
+      document.getElementById('formDeviceId').value = dev.id;
+      document.getElementById('formDeviceName').value = dev.name;
+      document.getElementById('formDeviceType').value = dev.type;
+      document.getElementById('formDeviceRoom').value = dev.room;
+      document.getElementById('formDeviceTopic').value = dev.topic;
+      document.getElementById('formDeviceWattage').value = dev.wattage || 0;
       document.getElementById('deviceModal').classList.remove('hidden');
     }
 
@@ -616,7 +652,7 @@ function handleLogout() {
       }
 
       saveDevices();
-		populateRoomFilter();
+      populateRoomFilter();
       renderDevices();
       closeDeviceModal();
     }
@@ -625,61 +661,64 @@ function handleLogout() {
       if (confirm('Apakah Anda yakin ingin menghapus perangkat ini?')) {
         devices = devices.filter(d => d.id !== id);
         saveDevices();
-		  populateRoomFilter();
+        populateRoomFilter();
         renderDevices();
       }
     }
-	  function populateRoomFilter() {
-  const select = document.getElementById('roomFilter');
-  if (!select) return;
 
-  const currentValue = select.value || 'ALL';
+    // --- MQTT MODAL & CONNECTION HANDLERS ---
+    function openMqttModal() {
+      document.getElementById('mqttBrokerUrl').value = brokerUrl;
+      document.getElementById('mqttTopicSensor').value = topicSensor;
+      document.getElementById('mqttModal').classList.remove('hidden');
+    }
 
-  // Ambil semua nama ruangan unik dari daftar devices
-  const uniqueRooms = Array.from(new Set(devices.map(d => d.room ? d.room.trim() : '').filter(Boolean)));
+    function closeMqttModal() {
+      document.getElementById('mqttModal').classList.add('hidden');
+    }
 
-  let html = `<option value="ALL">Semua Ruangan</option>`;
-  uniqueRooms.forEach(room => {
-    html += `<option value="${room}">${room}</option>`;
-  });
+    function handleMqttFormSubmit(e) {
+      e.preventDefault();
+      brokerUrl = document.getElementById('mqttBrokerUrl').value.trim();
+      topicSensor = document.getElementById('mqttTopicSensor').value.trim();
 
-  select.innerHTML = html;
+      localStorage.setItem('nexus_mqtt_broker', brokerUrl);
+      localStorage.setItem('nexus_mqtt_sensor', topicSensor);
+      document.getElementById('displayTopicSensor').innerText = topicSensor;
 
-  // Jaga pilihan filter user agar tidak reset sendiri
-  if (uniqueRooms.includes(currentValue)) {
-    select.value = currentValue;
-  } else {
-    select.value = 'ALL';
-  }
-}
-
+      closeMqttModal();
+      connectMQTT();
+    }
 
     function connectMQTT() {
       const statusDot = document.getElementById('statusDot');
       const statusText = document.getElementById('statusText');
 
+      if (mqttClient) {
+        try { mqttClient.end(); } catch(e){}
+      }
+
+      statusDot.className = 'status-dot offline mr-2.5';
+      statusText.innerText = 'Connecting...';
+      statusText.className = 'text-xs md:text-sm font-medium text-gray-300';
+
       try {
         mqttClient = mqtt.connect(brokerUrl, { connectTimeout: 4000 });
-
+        
         mqttClient.on('connect', () => {
-          statusDot.className = 'w-2.5 h-2.5 rounded-full status-dot online mr-3';
+          statusDot.className = 'status-dot online mr-2.5';
           statusText.innerText = 'Online';
           statusText.className = 'text-xs md:text-sm font-medium text-green-400';
-
           mqttClient.subscribe(topicSensor);
-          devices.forEach(d => { if (d.topic) mqttClient.subscribe(d.topic); });
         });
 
         mqttClient.on('message', (topic, message) => {
           if (topic === topicSensor) {
             try {
               const data = JSON.parse(message.toString());
-              if (data.temp !== undefined) {
-                document.getElementById('currentTemp').innerText = data.temp;
-                updateChart(data.temp, data.hum || 65);
-              }
-              if (data.hum !== undefined) document.getElementById('currentHum').innerText = data.hum;
-            } catch(e) {}
+              if (data.temp) document.getElementById('currentTemp').innerText = data.temp;
+              if (data.hum) document.getElementById('currentHum').innerText = data.hum;
+            } catch(e){}
           }
         });
 
@@ -691,46 +730,26 @@ function handleLogout() {
     }
 
     function setMqttOffline() {
-      document.getElementById('statusDot').className = 'w-2.5 h-2.5 rounded-full status-dot demo mr-3';
+      document.getElementById('statusDot').className = 'status-dot demo mr-2.5';
       document.getElementById('statusText').innerText = 'Demo Mode';
       document.getElementById('statusText').className = 'text-xs md:text-sm font-medium text-amber-400';
     }
 
-    function publishMQTT(topic, payload) {
-      if (mqttClient && mqttClient.connected) mqttClient.publish(topic, payload);
-    }
-
-    function openMqttModal() { document.getElementById('mqttModal').classList.remove('hidden'); }
-    function closeMqttModal() { document.getElementById('mqttModal').classList.add('hidden'); }
-
-    function saveMqttConfig(e) {
-      e.preventDefault();
-      brokerUrl = document.getElementById('cfgBrokerUrl').value;
-      topicSensor = document.getElementById('cfgTopicSensor').value;
-      if (mqttClient) mqttClient.end();
-      connectMQTT();
-      closeMqttModal();
-    }
-
+    // --- CHART REALTIME ---
     function initChart() {
       const ctx = document.getElementById('sensorChart').getContext('2d');
-      const gradientTemp = ctx.createLinearGradient(0, 0, 0, 200);
-      gradientTemp.addColorStop(0, 'rgba(245, 158, 11, 0.4)');
-      gradientTemp.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
-
       sensorChart = new Chart(ctx, {
         type: 'line',
         data: {
           labels: chartLabels,
           datasets: [
-            { label: 'Suhu (°C)', data: tempData, borderColor: '#f59e0b', backgroundColor: gradientTemp, fill: true, tension: 0.4 },
+            { label: 'Suhu (°C)', data: tempData, borderColor: '#f59e0b', fill: false, tension: 0.4 },
             { label: 'Kelembaban (%)', data: humData, borderColor: '#00ff66', borderDash: [5, 5], tension: 0.4 }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#9ca3af' } } },
           scales: {
             x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
             y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } }
@@ -739,27 +758,26 @@ function handleLogout() {
       });
     }
 
-    function updateChart(newTemp, newHum) {
-      if (!sensorChart) return;
-      const nowTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-      sensorChart.data.labels.push(nowTime);
-      sensorChart.data.datasets[0].data.push(newTemp);
-      sensorChart.data.datasets[1].data.push(newHum);
-      if (sensorChart.data.labels.length > 7) {
-        sensorChart.data.labels.shift();
-        sensorChart.data.datasets[0].data.shift();
-        sensorChart.data.datasets[1].data.shift();
-      }
-      sensorChart.update();
-    }
-
     function simulateSensorData() {
       const randomTemp = (25 + Math.random() * 5).toFixed(1);
       const randomHum = Math.floor(55 + Math.random() * 20);
       document.getElementById('currentTemp').innerText = randomTemp;
       document.getElementById('currentHum').innerText = randomHum;
-      updateChart(parseFloat(randomTemp), randomHum);
+
+      if (sensorChart) {
+        const now = new Date();
+        const timeStr = now.getHours() + ':' + (now.getMinutes()<10?'0':'') + now.getMinutes();
+        sensorChart.data.labels.shift();
+        sensorChart.data.labels.push(timeStr);
+        sensorChart.data.datasets[0].data.shift();
+        sensorChart.data.datasets[0].data.push(randomTemp);
+        sensorChart.data.datasets[1].data.shift();
+        sensorChart.data.datasets[1].data.push(randomHum);
+        sensorChart.update();
+      }
     }
   </script>
 </body>
 </html>
+
+

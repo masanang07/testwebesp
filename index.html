@@ -75,6 +75,44 @@
   </style>
 </head>
 <body class="flex h-screen antialiased selection:bg-neonblue selection:text-black">
+	<!-- Overlay Halaman Login -->
+<div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#050509] p-4">
+  <div class="glass-panel p-8 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl space-y-6">
+    <div class="text-center space-y-2">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-400/10 text-cyan-400 mb-2 border border-cyan-400/30">
+        <i class="ph-fill ph-hexagon text-4xl icon-glow"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-white tracking-wide">NEXUS DASHBOARD</h2>
+      <p class="text-xs text-gray-400">Silakan masuk untuk mengakses sistem IoT</p>
+    </div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+      <div>
+        <label class="block text-xs font-medium text-gray-400 mb-1">Username</label>
+        <input type="text" id="loginUser" required placeholder="Masukkan username" class="w-full bg-gray-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-400 transition-colors">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-400 mb-1">Password</label>
+        <input type="password" id="loginPass" required placeholder="Masukkan password" class="w-full bg-gray-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-400 transition-colors">
+      </div>
+
+      <div id="loginError" class="text-red-400 text-xs hidden text-center font-medium bg-red-500/10 py-2 rounded-lg border border-red-500/20">
+        Username atau password salah!
+      </div>
+
+      <button type="submit" class="w-full bg-gradient-to-r from-cyan-400 to-purple-600 text-black font-semibold text-sm py-3 rounded-xl hover:opacity-90 transition-opacity">
+        Masuk
+      </button>
+    </form>
+
+    <p class="text-[11px] text-center text-gray-500">
+      Default: Username <code class="text-cyan-400">admin</code> | Password <code class="text-cyan-400">admin123</code>
+    </p>
+  </div>
+</div>
+
+
+
 
   <div id="sidebarOverlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/70 z-40 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
 

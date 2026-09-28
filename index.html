@@ -363,8 +363,9 @@
 
     // Konfigurasi HIVEMQ Cloud Browser WebSocket
     let brokerUrl = localStorage.getItem('nexus_mqtt_broker') || 'wss://8f1a0c2a49564ab48f18084cc37825db.s1.eu.hivemq.cloud:8884/mqtt';
-    let mqttUserVal = localStorage.getItem('nexus_mqtt_user') || 'exwann';
-    let mqttPassVal = localStorage.getItem('nexus_mqtt_pass') || '12341234';
+let topicSensor = localStorage.getItem('nexus_mqtt_sensor') || 'anang_test_iot/sensor';
+let mqttUserVal = localStorage.getItem('nexus_mqtt_user') || 'lampu';
+let mqttPassVal = localStorage.getItem('nexus_mqtt_pass') || '12341234';
     let sensorChart = null;
 
     const chartLabels = ['10:00', '10:05', '10:10', '10:15', '10:20', '10:25'];
@@ -653,32 +654,43 @@
 
     // --- MQTT & CHART ---
     function openMqttModal() {
-      document.getElementById('mqttBrokerUrl').value = brokerUrl;
-      document.getElementById('mqttUser').value = mqttUserVal;
-      document.getElementById('mqttPass').value = mqttPassVal;
-      document.getElementById('mqttTopicSensor').value = topicSensor;
-      document.getElementById('mqttModal').classList.remove('hidden');
-    }
+  const modal = document.getElementById('mqttModal');
+  if (!modal) return alert("Elemen #mqttModal tidak ditemukan di HTML!");
 
-    function closeMqttModal() { document.getElementById('mqttModal').classList.add('hidden'); }
+  if (document.getElementById('mqttBrokerUrl')) document.getElementById('mqttBrokerUrl').value = brokerUrl;
+  if (document.getElementById('mqttTopicSensor')) document.getElementById('mqttTopicSensor').value = topicSensor;
+  if (document.getElementById('mqttUsername')) document.getElementById('mqttUsername').value = mqttUserVal;
+  if (document.getElementById('mqttPassword')) document.getElementById('mqttPassword').value = mqttPassVal;
 
-    function handleMqttFormSubmit(e) {
-      e.preventDefault();
-      brokerUrl = document.getElementById('mqttBrokerUrl').value.trim();
-      mqttUserVal = document.getElementById('mqttUser').value.trim();
-      mqttPassVal = document.getElementById('mqttPass').value.trim();
-      topicSensor = document.getElementById('mqttTopicSensor').value.trim();
+  modal.classList.remove('hidden');
+}
 
-      localStorage.setItem('nexus_mqtt_broker', brokerUrl);
-      localStorage.setItem('nexus_mqtt_user', mqttUserVal);
-      localStorage.setItem('nexus_mqtt_pass', mqttPassVal);
-      localStorage.setItem('nexus_mqtt_sensor', topicSensor);
+// Fungsi Tutup Popup
+function closeMqttModal() {
+  const modal = document.getElementById('mqttModal');
+  if (modal) modal.classList.add('hidden');
+}
 
-      document.getElementById('displayTopicSensor').innerText = topicSensor;
-      closeMqttModal();
-      connectMQTT();
-    }
+// Fungsi Simpan Settingan
+function handleMqttFormSubmit(e) {
+  e.preventDefault();
+  brokerUrl = document.getElementById('mqttBrokerUrl').value.trim();
+  topicSensor = document.getElementById('mqttTopicSensor').value.trim();
+  mqttUserVal = document.getElementById('mqttUsername') ? document.getElementById('mqttUsername').value.trim() : '';
+  mqttPassVal = document.getElementById('mqttPassword') ? document.getElementById('mqttPassword').value.trim() : '';
 
+  localStorage.setItem('nexus_mqtt_broker', brokerUrl);
+  localStorage.setItem('nexus_mqtt_sensor', topicSensor);
+  localStorage.setItem('nexus_mqtt_user', mqttUserVal);
+  localStorage.setItem('nexus_mqtt_pass', mqttPassVal);
+
+  if (document.getElementById('displayTopicSensor')) {
+    document.getElementById('displayTopicSensor').innerText = topicSensor;
+  }
+
+  closeMqttModal();
+  connectMQTT();
+}
     function subscribeAllTopics() {
       if (!mqttClient || !mqttClient.connected) return;
       mqttClient.subscribe(topicSensor);

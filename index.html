@@ -506,20 +506,20 @@
           // 3. Tangkap feedback dari saklar/device
           const dev = devices.find(d => d.topic === topic);
           if (dev) {
-            triggerEspHeartbeat();
+            
             if (msgStr === 'ON') dev.status = true;
-            else if (msgStr === 'OFF') dev.status = false;
-            else {
-              try {
-                const data = JSON.parse(msgStr);
-                if (data.status !== undefined) dev.status = (data.status === 'ON' || data.status === true);
-                if (data.speed !== undefined) dev.speed = data.speed;
-                if (data.temp !== undefined) dev.temp = data.temp;
-              } catch(e){}
-            }
-            saveDevices();
-            renderDevices();
-          }
+  else if (msgStr === 'OFF') dev.status = false;
+  else {
+    try {
+      const data = JSON.parse(msgStr);
+      if (data.status !== undefined) dev.status = (data.status === 'ON' || data.status === true);
+      if (data.speed !== undefined) dev.speed = data.speed;
+      if (data.temp !== undefined) dev.temp = data.temp;
+    } catch(e){}
+  }
+  saveDevices();
+  renderDevices();
+}
         });
 
         mqttClient.on('error', () => setStatusState('offline', 'Disconnected'));

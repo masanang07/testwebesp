@@ -345,6 +345,7 @@
       </form>
     </div>
   </div>
+  
 
   <!-- ==================== JAVASCRIPT SYSTEM LOGIC ==================== -->
   <script>
@@ -671,7 +672,21 @@ function closeMqttModal() {
   if (modal) modal.classList.add('hidden');
 }
 
-// Fungsi Simpan Settingan
+const firebaseConfig = {
+  apiKey: "AIzaSyBaOuGJ0xEfJZsu9D0oW6TkStS0n7SBj7g",
+  authDomain: "webiot-3e41a.firebaseapp.com",
+  databaseURL: "https://webiot-3e41a-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "webiot-3e41a",
+  storageBucket: "webiot-3e41a.firebasestorage.app",
+  messagingSenderId: "263006241991",
+  appId: "1:263006241991:web:5e7be750e184a5d625eae2",
+  measurementId: "G-6K7P29C44L"
+};
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
 function handleMqttFormSubmit(e) {
   e.preventDefault();
   brokerUrl = document.getElementById('mqttBrokerUrl').value.trim();

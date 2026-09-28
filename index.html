@@ -719,65 +719,44 @@ function handleMqttFormSubmit(e) {
     }
 
     function connectMQTT() {
-      const statusDot = document.getElementById('statusDot');
-      const statusText = document.getElementById('statusText');
+  const broker = localStorage.getItem('nexus_mqtt_broker') || 'wss://8f1a0c2a49564ab48f18084cc37825db.s1.eu.hivemq.cloud:8884/mqtt';
+  const user = localStorage.getItem('nexus_mqtt_user') || '';
+  const pass = localStorage.getItem('nexus_mqtt_pass') || '';
 
-      if (mqttClient) { try { mqttClient.end(); } catch(e){} }
+  const options = {
+    connectTimeout: 5000,
+    clientId: 'nexus_web_' + Math.random().toString(16).substr(2, 8)
+  };
 
-      statusDot.className = 'status-dot offline mr-2.5';
-      statusText.innerText = 'Connecting...';
+  // Sertakan username & password jika ada
+  if (user) options.username = user;
+  if (pass) options.password = pass;
 
-      try {
-        mqttClient = mqtt.connect(brokerUrl, {
-          username: mqttUserVal,
-          password: mqttPassVal,
-          connectTimeout: 5000,
-          reconnectPeriod: 3000
-        });
+  if (mqttClient) {
+    try { mqttClient.end(true); } catch(e){}
+  }
 
-        mqttClient.on('connect', () => {
-          statusDot.className = 'status-dot online mr-2.5';
-          statusText.innerText = 'Online';
-          statusText.className = 'text-xs md:text-sm font-medium text-green-400';
-          subscribeAllTopics();
-        });
+  try {
+    mqttClient = mqtt.connect(broker, options);
 
-        mqttClient.on('message', (topic, message) => {
-          const msgStr = message.toString();
+    mqttClient.on('connect', () => {
+      console.log('MQTT Connected successfully!');
+      document.getElementById('statusDot').className = 'w-2.5 h-2.5 rounded-full status-dot online mr-3';
+      document.getElementById('statusText').innerText = 'Online';
+      document.getElementById('statusText').className = 'text-xs md:text-sm font-medium text-green-400';
+      subscribeAllTopics();
+    });
 
-          if (topic === topicSensor) {
-            try {
-              const data = JSON.parse(msgStr);
-              if (data.temp !== undefined) document.getElementById('currentTemp').innerText = data.temp;
-              if (data.hum !== undefined) document.getElementById('currentHum').innerText = data.hum;
-            } catch(e){}
-            return;
-          }
+    mqttClient.on('error', (err) => {
+      console.error('MQTT Error:', err);
+      setMqttOffline();
+    });
 
-          const dev = devices.find(d => d.topic === topic);
-          if (dev) {
-            if (msgStr === 'ON') dev.status = true;
-            else if (msgStr === 'OFF') dev.status = false;
-            else {
-              try {
-                const data = JSON.parse(msgStr);
-                if (data.status !== undefined) dev.status = (data.status === 'ON' || data.status === true);
-                if (data.speed !== undefined) dev.speed = data.speed;
-                if (data.temp !== undefined) dev.temp = data.temp;
-              } catch(e){}
-            }
-            saveDevices();
-            renderDevices();
-          }
-        });
-
-        mqttClient.on('error', setMqttOffline);
-        mqttClient.on('close', setMqttOffline);
-      } catch (err) {
-        setMqttOffline();
-      }
-    }
-
+    mqttClient.on('close', () => setMqttOffline());
+  } catch (err) {
+    setMqttOffline();
+  }
+}
     function setMqttOffline() {
       document.getElementById('statusDot').className = 'status-dot demo mr-2.5';
       document.getElementById('statusText').innerText = 'Demo Mode';

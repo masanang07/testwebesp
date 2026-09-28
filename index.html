@@ -97,14 +97,14 @@
 </head>
 <body class="bg-[#050509] min-h-screen text-white">
 
-  <!-- ==================== 1. HALAMAN LOGIN (Terpisah Total) ==================== -->
+  <!-- ==================== 1. HALAMAN LOGIN ==================== -->
   <div id="loginScreen" class="fixed inset-0 z-[100] flex items-center justify-center bg-[#050509] p-4">
     <div class="glass-panel p-8 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl space-y-6">
       <div class="text-center space-y-2">
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-400/10 text-cyan-400 mb-2 border border-cyan-400/30">
           <i class="ph-fill ph-hexagon text-4xl icon-glow"></i>
         </div>
-        <h2 class="text-2xl font-bold text-white tracking-wide">NEXUS DASHBOARD</h2>
+        <h2 class="text-2xl font-bold text-white tracking-wide">EXWANN DASHBOARD</h2>
         <p class="text-xs text-gray-400">Silakan masuk untuk mengakses sistem IoT</p>
       </div>
 
@@ -126,10 +126,6 @@
           Masuk
         </button>
       </form>
-
-      <p class="text-[11px] text-center text-gray-500">
-        
-      </p>
     </div>
   </div>
 
@@ -144,12 +140,12 @@
       <div class="h-20 flex items-center justify-between px-8 border-b border-white/5">
         <div class="flex items-center">
           <i class="ph-fill ph-hexagon text-3xl text-cyan-400 mr-3 icon-glow"></i>
-          <h1 class="text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">NEXUS</h1>
+          <h1 class="text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">EXWANN</h1>
         </div>
         <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-400"><i class="ph ph-x text-2xl"></i></button>
       </div>
       
-      <nav class="flex-1 px-4 py-6 space-y-2">
+      <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
         <a href="#" class="flex items-center px-4 py-3 rounded-xl bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 text-glow">
           <i class="ph ph-squares-four text-xl mr-3"></i> Dashboard
         </a>
@@ -162,13 +158,27 @@
         <button onclick="openMqttModal()" class="w-full flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors text-left">
           <i class="ph ph-gear text-xl mr-3"></i> Setting MQTT
         </button>
+
+        <!-- INFO WIFI CARD -->
+        <div class="pt-4 pb-2">
+          <div class="p-4 rounded-2xl glass-panel border border-cyan-400/20 text-xs space-y-2 bg-cyan-950/20">
+            <div class="flex items-center text-cyan-400 font-semibold">
+              <i class="ph ph-wifi-high text-lg mr-2 icon-glow"></i> Wi-Fi Sistem
+            </div>
+            <div class="space-y-1 pt-1 border-t border-white/5 text-gray-300">
+              <p class="flex justify-between"><span>SSID:</span> <span class="font-mono text-cyan-300 font-bold">(free)</span></p>
+              <p class="flex justify-between"><span>Pass:</span> <span class="font-mono text-cyan-300 font-bold">12345678</span></p>
+            </div>
+          </div>
+        </div>
+
         <button onclick="handleLogout()" class="w-full flex items-center px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 text-left transition-colors">
           <i class="ph ph-sign-out text-xl mr-3"></i> Keluar
         </button>
       </nav>
 
       <div class="p-4 border-t border-white/5 text-xs text-gray-500 text-center">
-        Nexus IoT Dashboard v2.0
+        exwann Smart Home v2.0
       </div>
     </aside>
 
@@ -181,7 +191,7 @@
           </button>
           <div>
             <h2 class="text-lg font-medium text-gray-200">
-              <span id="greetingText">Selamat Datang</span>, <span class="text-white font-semibold">Anang Apri</span>
+              <span id="greetingText">Selamat Datang</span>, <span class="text-white font-semibold">exwann User</span>
             </h2>
             <p id="liveClock" class="text-xs text-cyan-400 font-mono">00:00:00 WIB</p>
           </div>
@@ -308,13 +318,21 @@
   <div id="mqttModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="glass-panel p-6 rounded-2xl w-full max-w-md border border-white/10 space-y-4">
       <div class="flex justify-between items-center border-b border-white/10 pb-3">
-        <h3 class="text-lg font-semibold text-white">Konfigurasi MQTT Broker</h3>
+        <h3 class="text-lg font-semibold text-white">Konfigurasi MQTT HiveMQ Cloud</h3>
         <button onclick="closeMqttModal()" class="text-gray-400 hover:text-white"><i class="ph ph-x text-xl"></i></button>
       </div>
-      <form id="mqttForm" onsubmit="handleMqttFormSubmit(event)" class="space-y-4">
+      <form id="mqttForm" onsubmit="handleMqttFormSubmit(event)" class="space-y-3">
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1">WebSocket Broker URL</label>
           <input type="text" id="mqttBrokerUrl" required class="w-full bg-gray-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">MQTT Username</label>
+          <input type="text" id="mqttUser" required class="w-full bg-gray-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">MQTT Password</label>
+          <input type="password" id="mqttPass" required class="w-full bg-gray-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1">Topic Telemetri Sensor</label>
@@ -342,7 +360,11 @@
 
     let devices = [];
     let mqttClient = null;
-    let brokerUrl = localStorage.getItem('nexus_mqtt_broker') || 'wss://broker.hivemq.com:8884/mqtt';
+
+    // Konfigurasi HIVEMQ Cloud Browser WebSocket
+    let brokerUrl = localStorage.getItem('nexus_mqtt_broker') || 'wss://8f1a0c2a49564ab48f18084cc37825db.s1.eu.hivemq.cloud:8884/mqtt';
+    let mqttUserVal = localStorage.getItem('nexus_mqtt_user') || 'lampu';
+    let mqttPassVal = localStorage.getItem('nexus_mqtt_pass') || '12341234';
     let topicSensor = localStorage.getItem('nexus_mqtt_sensor') || 'anang_test_iot/sensor';
     let sensorChart = null;
 
@@ -363,7 +385,6 @@
         mainApp.classList.remove('hidden');
         mainApp.classList.add('flex');
 
-        // Jalankan sistem aman setelah halaman dashboard dirender
         try { loadDevices(); } catch(e){}
         try { initClock(); } catch(e){}
         try { if(!sensorChart) initChart(); } catch(e){}
@@ -522,26 +543,52 @@
       calculateStats();
     }
 
+    // --- AUTO PUBLISH ENGINE ---
+    function publishDeviceState(device) {
+      if (!mqttClient || !mqttClient.connected) return;
+
+      let payload = '';
+      if (device.type === 'fan') {
+        payload = JSON.stringify({ status: device.status ? 'ON' : 'OFF', speed: device.speed });
+      } else if (device.type === 'ac') {
+        payload = JSON.stringify({ status: device.status ? 'ON' : 'OFF', temp: device.temp });
+      } else {
+        payload = device.status ? 'ON' : 'OFF';
+      }
+
+      mqttClient.publish(device.topic, payload, { retain: false });
+    }
+
     function toggleDeviceStatus(id) {
       const device = devices.find(d => d.id === id);
       if (!device) return;
       device.status = !device.status;
       saveDevices();
-      if (mqttClient && mqttClient.connected) mqttClient.publish(device.topic, device.status ? 'ON' : 'OFF');
       renderDevices();
+      publishDeviceState(device);
     }
 
     function setFanSpeed(id, speed) {
       const dev = devices.find(d => d.id === id);
-      if (dev) { dev.speed = speed; saveDevices(); renderDevices(); }
+      if (dev) {
+        dev.speed = speed;
+        saveDevices();
+        renderDevices();
+        publishDeviceState(dev);
+      }
     }
 
     function changeAcTemp(id, delta) {
       const dev = devices.find(d => d.id === id);
-      if (dev) { dev.temp = Math.min(30, Math.max(16, (dev.temp || 24) + delta)); saveDevices(); renderDevices(); }
+      if (dev) {
+        dev.temp = Math.min(30, Math.max(16, (dev.temp || 24) + delta));
+        saveDevices();
+        renderDevices();
+        publishDeviceState(dev);
+      }
     }
 
-    // --- MODAL & FORM HANDLERS ---
+    // --- MODAL HANDLERS ---
     function openAddDeviceModal() {
       document.getElementById('modalTitle').innerText = 'Tambah Perangkat Baru';
       document.getElementById('formDeviceId').value = '';
@@ -590,6 +637,10 @@
       populateRoomFilter();
       renderDevices();
       closeDeviceModal();
+
+      if (mqttClient && mqttClient.connected) {
+        mqttClient.subscribe(topic);
+      }
     }
 
     function deleteDevice(id) {
@@ -604,6 +655,8 @@
     // --- MQTT & CHART ---
     function openMqttModal() {
       document.getElementById('mqttBrokerUrl').value = brokerUrl;
+      document.getElementById('mqttUser').value = mqttUserVal;
+      document.getElementById('mqttPass').value = mqttPassVal;
       document.getElementById('mqttTopicSensor').value = topicSensor;
       document.getElementById('mqttModal').classList.remove('hidden');
     }
@@ -613,12 +666,26 @@
     function handleMqttFormSubmit(e) {
       e.preventDefault();
       brokerUrl = document.getElementById('mqttBrokerUrl').value.trim();
+      mqttUserVal = document.getElementById('mqttUser').value.trim();
+      mqttPassVal = document.getElementById('mqttPass').value.trim();
       topicSensor = document.getElementById('mqttTopicSensor').value.trim();
+
       localStorage.setItem('nexus_mqtt_broker', brokerUrl);
+      localStorage.setItem('nexus_mqtt_user', mqttUserVal);
+      localStorage.setItem('nexus_mqtt_pass', mqttPassVal);
       localStorage.setItem('nexus_mqtt_sensor', topicSensor);
+
       document.getElementById('displayTopicSensor').innerText = topicSensor;
       closeMqttModal();
       connectMQTT();
+    }
+
+    function subscribeAllTopics() {
+      if (!mqttClient || !mqttClient.connected) return;
+      mqttClient.subscribe(topicSensor);
+      devices.forEach(dev => {
+        if (dev.topic) mqttClient.subscribe(dev.topic);
+      });
     }
 
     function connectMQTT() {
@@ -631,21 +698,46 @@
       statusText.innerText = 'Connecting...';
 
       try {
-        mqttClient = mqtt.connect(brokerUrl, { connectTimeout: 4000 });
+        mqttClient = mqtt.connect(brokerUrl, {
+          username: mqttUserVal,
+          password: mqttPassVal,
+          connectTimeout: 5000,
+          reconnectPeriod: 3000
+        });
+
         mqttClient.on('connect', () => {
           statusDot.className = 'status-dot online mr-2.5';
           statusText.innerText = 'Online';
           statusText.className = 'text-xs md:text-sm font-medium text-green-400';
-          mqttClient.subscribe(topicSensor);
+          subscribeAllTopics();
         });
 
         mqttClient.on('message', (topic, message) => {
+          const msgStr = message.toString();
+
           if (topic === topicSensor) {
             try {
-              const data = JSON.parse(message.toString());
-              if (data.temp) document.getElementById('currentTemp').innerText = data.temp;
-              if (data.hum) document.getElementById('currentHum').innerText = data.hum;
+              const data = JSON.parse(msgStr);
+              if (data.temp !== undefined) document.getElementById('currentTemp').innerText = data.temp;
+              if (data.hum !== undefined) document.getElementById('currentHum').innerText = data.hum;
             } catch(e){}
+            return;
+          }
+
+          const dev = devices.find(d => d.topic === topic);
+          if (dev) {
+            if (msgStr === 'ON') dev.status = true;
+            else if (msgStr === 'OFF') dev.status = false;
+            else {
+              try {
+                const data = JSON.parse(msgStr);
+                if (data.status !== undefined) dev.status = (data.status === 'ON' || data.status === true);
+                if (data.speed !== undefined) dev.speed = data.speed;
+                if (data.temp !== undefined) dev.temp = data.temp;
+              } catch(e){}
+            }
+            saveDevices();
+            renderDevices();
           }
         });
 

@@ -442,23 +442,30 @@ let mqttPassVal = localStorage.getItem('nexus_mqtt_pass') || '12341234';
       setInterval(update, 1000);
     }
 
-    // --- DEVICES MANAGEMENT ---
-    function loadDevices() {
-      const saved = localStorage.getItem('nexus_devices');
-      if (saved) {
-        try { devices = JSON.parse(saved); } catch(e) { devices = [...initialDevices]; }
-      } else {
-        devices = [...initialDevices];
-        saveDevices();
-      }
-      populateRoomFilter();
-      renderDevices();
+    // === FUNGSI LOAD DEVICES (VERSI FIREBASE) ===
+function loadDevices() {
+  // Mendengarkan data dari Firebase secara otomatis & real-time
+  db.ref('devices').on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      devices = data;
+    } else {
+      // Jika database Firebase masih kosong, pakai data awal
+      devices = [...initialDevices];
+      saveDevices();
     }
+    populateRoomFilter();
+    renderDevices();
+  });
+}
 
-    function saveDevices() {
-      localStorage.setItem('nexus_devices', JSON.stringify(devices));
-      calculateStats();
-    }
+// === FUNGSI SAVE DEVICES (VERSI FIREBASE) ===
+    const db = firebase.database();
+function saveDevices() {
+  // Mengunggah data perangkat ke database Cloud Firebase
+  db.ref('devices').set(devices);
+  calculateStats();
+}
 
     function calculateStats() {
       const activeDevs = devices.filter(d => d.status);

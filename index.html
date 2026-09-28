@@ -455,7 +455,7 @@
         try { mqttClient.end(true); } catch(e){} 
       }
       
-      // Initial state: Connecting (Merah/Kuning)
+      // Initial state: Connecting
       setStatusState('connecting', 'Connecting...');
 
       const options = {
@@ -551,14 +551,58 @@
       mqttClient.publish(device.topic, payload, { retain: false });
     }
 
-    // --- FIREBASE DATABASE & DEVICE LOGIC ---
+    // --- FIREBASE DATABASE & DEVICE LOGIC (UPDATED PARSER) ---
     function loadDevices() {
       db.ref('devices').on('value', (snapshot) => {
         const data = snapshot.val();
-        devices = (data && Array.isArray(data)) ? data : [];
+        
+        if (!data) {
+          devices = [];
+        } else if (Array.isArray(data)) {
+          // Jika data disimpan sebagai Array
+          devices = data.filter(item => item !== null).map((item, idx) => ({
+            id: item.id || 'dev_' + idx,
+            name: item.name || 'Perangkat Tanpa Nama',
+            type: item.type || 'light',
+            room: item.room || 'Umum',
+            topic: item.topic || '',
+            wattage: Number(item.wattage) || 0,
+            status: item.status === true || item.status === 'ON',
+            speed: item.speed || 1,
+            temp: item.temp || 24,
+            icon: item.icon || getDeviceDefaultIcon(item.type)
+          }));
+        } else if (typeof data === 'object') {
+          // Jika data disimpan sebagai Key-Value / Object (misal dari Console)
+          devices = Object.keys(data).map(key => {
+            const item = data[key];
+            return {
+              id: item.id || key,
+              name: item.name || 'Perangkat Tanpa Nama',
+              type: item.type || 'light',
+              room: item.room || 'Umum',
+              topic: item.topic || '',
+              wattage: Number(item.wattage) || 0,
+              status: item.status === true || item.status === 'ON',
+              speed: item.speed || 1,
+              temp: item.temp || 24,
+              icon: item.icon || getDeviceDefaultIcon(item.type)
+            };
+          });
+        }
+
         populateRoomFilter();
         renderDevices();
+        subscribeAllTopics();
       });
+    }
+
+    function getDeviceDefaultIcon(type) {
+      if (type === 'light') return 'ph-lightbulb';
+      if (type === 'fan') return 'ph-wind';
+      if (type === 'ac') return 'ph-thermometer-snow';
+      if (type === 'lock') return 'ph-lock-key';
+      return 'ph-power';
     }
 
     function saveDevices() {
@@ -599,7 +643,7 @@
         : devices.filter(d => d.room && d.room.trim().toLowerCase() === filter.trim().toLowerCase());
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="col-span-full glass-panel p-8 rounded-2xl text-center text-gray-500"><i class="ph ph-devices text-4xl mb-2 text-gray-600"></i><p>Belum ada alat. Klik "+ Tambah Alat" untuk menambahkan tombol baru ke database.</p></div>`;
+        container.innerHTML = `<div class="col-span-full glass-panel p-8 rounded-2xl text-center text-gray-500"><i class="ph ph-devices text-4xl mb-2 text-gray-600"></i><p>Belum ada alat. Klik "+ Tambah Alat" untuk menambahkan perangkat baru ke database.</p></div>`;
         calculateStats();
         return;
       }
@@ -649,7 +693,7 @@
           ${extraControls}
 
           <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs">
-            <span class="text-gray-500 font-mono text-[10px] truncate max-w-[150px]"><i class="ph ph-broadcast mr-1"></i>${device.topic}</span>
+            <span class="text-gray-500 font-mono text-[10px] truncate max-w-[150px]"><i class="ph ph-broadcast mr-1"></i>${device.topic || '--'}</span>
             <span class="font-bold ${device.status ? 'text-cyan-400 text-glow' : 'text-gray-500'}">${device.status ? 'ON' : 'OFF'}</span>
           </div>
         `;
@@ -722,11 +766,7 @@
       const topic = document.getElementById('formDeviceTopic').value;
       const wattage = parseInt(document.getElementById('formDeviceWattage').value) || 0;
 
-      let icon = 'ph-power';
-      if (type === 'light') icon = 'ph-lightbulb';
-      else if (type === 'fan') icon = 'ph-wind';
-      else if (type === 'ac') icon = 'ph-thermometer-snow';
-      else if (type === 'lock') icon = 'ph-lock-key';
+      const icon = getDeviceDefaultIcon(type);
 
       if (id) {
         const dev = devices.find(d => d.id === id);

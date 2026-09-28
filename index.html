@@ -689,10 +689,6 @@ const firebaseConfig = {
   appId: "1:263006241991:web:5e7be750e184a5d625eae2",
   measurementId: "G-6K7P29C44L"
 };
-
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-
 function handleMqttFormSubmit(e) {
   e.preventDefault();
   brokerUrl = document.getElementById('mqttBrokerUrl').value.trim();

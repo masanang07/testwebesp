@@ -460,7 +460,7 @@ function loadDevices() {
 }
 
 // === FUNGSI SAVE DEVICES (VERSI FIREBASE) ===
-    const db = firebase.database();
+  
 function saveDevices() {
   // Mengunggah data perangkat ke database Cloud Firebase
   db.ref('devices').set(devices);

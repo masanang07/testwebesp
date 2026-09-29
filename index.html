@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nexus Smart Home Dashboard</title>
+  <title>exWann Smart Home Dashboard</title>
 
   <!-- 1. FIREBASE COMPAT CDN -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -42,14 +42,20 @@
     .toggle-label { width: 50px; height: 26px; background-color: #1a1c29; border: 1px solid rgba(255,255,255,0.2); border-radius: 9999px; position: relative; cursor: pointer; transition: all 0.3s ease; }
     .toggle-label:after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background-color: #6b7280; border-radius: 50%; transition: all 0.3s ease; }
 
-    @keyframes spin-slow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .spin-slow { animation: spin-slow 3s linear infinite; }
-    .spin-med { animation: spin-slow 1.5s linear infinite; }
-    .spin-fast { animation: spin-slow 0.6s linear infinite; }
-
     /* Indicator Bulat Status */
     .status-dot.online { background-color: #00ff66; box-shadow: 0 0 10px #00ff66; }
     .status-dot.offline { background-color: #ff3333; box-shadow: 0 0 10px #ff3333; }
+
+    /* Print Styles untuk Cetak Tagihan */
+    @media print {
+      body * { visibility: hidden; }
+      #billingSection, #billingSection * { visibility: visible; }
+      #billingSection { position: absolute; left: 0; top: 0; width: 100%; color: #000; background: #fff; p: 20px; }
+      .no-print { display: none !important; }
+      .glass-panel { background: #fff !important; border: 1px solid #ccc !important; color: #000 !important; }
+      table { color: #000 !important; }
+      th, td { border-color: #ddd !important; }
+    }
   </style>
 </head>
 <body class="flex h-screen antialiased bg-[#050509]">
@@ -61,7 +67,7 @@
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-400/10 text-cyan-400 mb-2 border border-cyan-400/30">
           <i class="ph-fill ph-hexagon text-4xl icon-glow"></i>
         </div>
-        <h2 class="text-2xl font-bold text-white tracking-wide">NEXUS DASHBOARD</h2>
+        <h2 class="text-2xl font-bold text-white tracking-wide">exWann DASHBOARD</h2>
         <p class="text-xs text-gray-400">Silakan masuk untuk mengakses sistem IoT</p>
       </div>
 
@@ -93,7 +99,7 @@
     <div class="h-20 flex items-center justify-between px-8 border-b border-white/5">
       <div class="flex items-center">
         <i class="ph-fill ph-hexagon text-3xl text-cyan-400 mr-3 icon-glow"></i>
-        <h1 class="text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">NEXUS</h1>
+        <h1 class="text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">exWann</h1>
       </div>
       <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-400"><i class="ph ph-x text-2xl"></i></button>
     </div>
@@ -101,6 +107,7 @@
       <a href="#" class="flex items-center px-4 py-3 rounded-xl bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 text-glow"><i class="ph ph-squares-four text-xl mr-3"></i> Dashboard</a>
       <a href="#devicesSection" class="flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5"><i class="ph ph-devices text-xl mr-3"></i> Perangkat</a>
       <a href="#telemetrySection" class="flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5"><i class="ph ph-chart-line-up text-xl mr-3"></i> Grafik Sensor</a>
+      <a href="#billingSection" class="flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5"><i class="ph ph-receipt text-xl mr-3"></i> Tagihan Listrik</a>
       
       <button onclick="openAccountModal()" class="w-full flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 text-left transition-colors">
         <i class="ph ph-user-gear text-xl mr-3"></i> Pengaturan Akun
@@ -127,7 +134,7 @@
       </div>
       
       <div class="flex items-center space-x-3">
-        <!-- Status Indikator ESP32 -->
+        <!-- Status ESP32 -->
         <div class="flex items-center glass-panel px-4 py-2 rounded-full border border-white/10">
           <div id="statusDot" class="w-2.5 h-2.5 rounded-full status-dot offline mr-2.5"></div>
           <span id="statusText" class="text-xs md:text-sm font-medium text-red-400">Connecting...</span>
@@ -181,6 +188,65 @@
         </div>
         <div id="devicesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
       </div>
+
+      <!-- Section Billing / Kalkulator Tagihan Listrik -->
+      <div id="billingSection" class="glass-panel p-6 rounded-2xl space-y-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-4">
+          <div>
+            <h2 class="text-xl font-semibold text-white flex items-center">
+              <i class="ph ph-receipt text-cyan-400 text-2xl mr-2"></i> Kalkulator & Estimasi Tagihan Listrik PLN
+            </h2>
+            <p class="text-xs text-gray-400">Hitung perkiraan konsumsi energi (kWh) dan estimasi biaya bulanan berdasarkan perangkat terdaftar.</p>
+          </div>
+          
+          <div class="flex items-center space-x-3 no-print">
+            <label class="text-xs text-gray-400 whitespace-nowrap">Tarif PLN:</label>
+            <select id="plnTariffSelect" onchange="renderBillingTable()" class="bg-gray-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-cyan-400 focus:outline-none focus:border-cyan-400">
+              <option value="1352">R-1/900 VA (Subsidi) - Rp 1.352 / kWh</option>
+              <option value="1444.7" selected>R-1/1300 VA & 2200 VA - Rp 1.444,70 / kWh</option>
+              <option value="1699.53">R-2/3500 VA - 5500 VA - Rp 1.699,53 / kWh</option>
+            </select>
+            <button onclick="window.print()" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs flex items-center border border-white/10 transition-colors">
+              <i class="ph ph-printer text-base mr-1.5"></i> Cetak
+            </button>
+          </div>
+        </div>
+
+        <!-- Metric Highlight Tagihan -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-gray-900/60 p-4 rounded-xl border border-white/5">
+            <p class="text-xs text-gray-400 mb-1">Total Estimasi kWh / Bulan</p>
+            <h4 class="text-xl font-bold text-cyan-400"><span id="totalMonthlyKwh">0.00</span> kWh</h4>
+          </div>
+          <div class="bg-gray-900/60 p-4 rounded-xl border border-white/5">
+            <p class="text-xs text-gray-400 mb-1">Estimasi Tagihan Bulanan</p>
+            <h4 class="text-xl font-bold text-green-400" id="totalMonthlyCost">Rp 0</h4>
+          </div>
+          <div class="bg-gray-900/60 p-4 rounded-xl border border-white/5">
+            <p class="text-xs text-gray-400 mb-1">Perangkat Paling Boros</p>
+            <h4 class="text-sm font-semibold text-amber-400 truncate" id="topConsumingDevice">-</h4>
+          </div>
+        </div>
+
+        <!-- Tabel Perhitungan Tagihan -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-gray-300">
+            <thead class="text-xs uppercase bg-white/5 text-gray-400 border-b border-white/10">
+              <tr>
+                <th class="px-4 py-3">Perangkat</th>
+                <th class="px-4 py-3">Ruangan</th>
+                <th class="px-4 py-3">Daya (Watt)</th>
+                <th class="px-4 py-3">Penggunaan (Jam/Hari)</th>
+                <th class="px-4 py-3">Konsumsi (kWh/Bulan)</th>
+                <th class="px-4 py-3 text-right">Estimasi Biaya / Bulan</th>
+              </tr>
+            </thead>
+            <tbody id="billingTableBody" class="divide-y divide-white/5">
+              <!-- Data diisi oleh JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -212,7 +278,7 @@
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1">MQTT Topic</label>
-          <input type="text" id="formDeviceTopic" required placeholder="Contoh: anang_test_iot/lampu1" class="w-full bg-gray-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+          <input type="text" id="formDeviceTopic" required placeholder="Contoh: ruangtamu//lampu" class="w-full bg-gray-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1">Konsumsi Daya (Watt)</label>
@@ -290,10 +356,9 @@
 
   <script>
     // =========================================================================
-    // BAGIAN 1: KONFIGURASI SISTEM (BISA DIEDIT SESUAI KEBUTUHAN)
+    // BAGIAN 1: KONFIGURASI SISTEM
     // =========================================================================
     const CONFIG = {
-      // 1. Firebase Config
       firebase: {
         apiKey: "AIzaSyBaOuGJ0xEfJZsu9D0oW6TkStS0n7SBj7g",
         authDomain: "webiot-3e41a.firebaseapp.com",
@@ -303,43 +368,28 @@
         messagingSenderId: "263006241991",
         appId: "1:263006241991:web:5e7be750e184a5d625eae2"
       },
-
-      // 2. Default Login Account
-      defaultAdmin: {
-        user: "admin",
-        pass: "admin123"
-      },
-
-      // 3. Default MQTT Credentials & Topics
+      defaultAdmin: { user: "admin", pass: "admin123" },
       defaultMqtt: {
         brokerUrl: 'wss://8f1a0c2a49564ab48f18084cc37825db.s1.eu.hivemq.cloud:8884/mqtt',
-        topicSensor: 'anang_test_iot/sensor',
-        topicStatus: 'anang_test_iot/status',
-        user: 'lampu',
+        topicSensor: 'esp32/sensor',
+        topicStatus: 'esp/status',
+        user: 'exwann',
         pass: '12341234'
       },
-
-      // 4. Timeout ESP (20 Detik -> Langsung Merah/Disconnected)
       espTimeoutMs: 20000 
     };
 
-    // =========================================================================
-    // BAGIAN 2: LOGIKA SYSTEM & DYNAMIC ENGINE (FIX - JANGAN DIUBAH)
-    // =========================================================================
-
     // Inisialisasi Firebase
-    if (!firebase.apps.length) {
-      firebase.initializeApp(CONFIG.firebase);
-    }
+    if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebase);
     const db = firebase.database();
 
     // Variable Global State
     let devices = [];
+    let deviceHours = {}; // menyimpan durasi jam/hari per perangkat
     let mqttClient = null;
     let espTimeoutTimer = null;
     let sensorChart = null;
 
-    // Load simpanan konfigurasi lokal
     let brokerUrl = localStorage.getItem('nexus_mqtt_broker') || CONFIG.defaultMqtt.brokerUrl;
     let topicSensor = localStorage.getItem('nexus_mqtt_sensor') || CONFIG.defaultMqtt.topicSensor;
     let topicStatus = localStorage.getItem('nexus_mqtt_status') || CONFIG.defaultMqtt.topicStatus;
@@ -359,14 +409,15 @@
       const loginScreen = document.getElementById('loginScreen');
       const creds = getAdminCreds();
 
-      if (document.getElementById('headerUser')) {
-        document.getElementById('headerUser').innerText = creds.user;
-      }
+      if (document.getElementById('headerUser')) document.getElementById('headerUser').innerText = creds.user;
 
       if (isLoggedIn === 'true') {
         loginScreen.classList.add('hidden');
         loadDevices();
         connectMQTT();
+        initChart();
+        updateClock();
+        setInterval(updateClock, 1000);
       } else {
         loginScreen.classList.remove('hidden');
       }
@@ -418,6 +469,18 @@
       }
     }
 
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('liveClock').innerText = now.toLocaleTimeString('id-ID') + ' WIB';
+    }
+
+    function toggleMobileSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.toggle('-translate-x-full');
+      overlay.classList.toggle('hidden');
+    }
+
     // --- MANAJEMEN STATUS ESP32 ---
     function setStatusState(state, message) {
       const dot = document.getElementById('statusDot');
@@ -432,7 +495,6 @@
         txt.innerText = message || 'Connecting...';
         txt.className = 'text-xs md:text-sm font-medium text-amber-400';
       } else {
-        // Disconnected
         dot.className = 'w-2.5 h-2.5 rounded-full status-dot offline mr-2.5';
         txt.innerText = message || 'Disconnected';
         txt.className = 'text-xs md:text-sm font-medium text-red-400';
@@ -442,8 +504,6 @@
     function triggerEspHeartbeat() {
       setStatusState('online', 'ESP32 Online');
       clearTimeout(espTimeoutTimer);
-
-      // Jika dalam 20 detik ESP32 tidak ada respon/data -> Langsung MERAH (Disconnected)
       espTimeoutTimer = setTimeout(() => {
         setStatusState('offline', 'Disconnected');
       }, CONFIG.espTimeoutMs);
@@ -455,7 +515,6 @@
         try { mqttClient.end(true); } catch(e){} 
       }
       
-      // Initial state: Connecting
       setStatusState('connecting', 'Connecting...');
 
       const options = {
@@ -465,6 +524,9 @@
 
       if (mqttUserVal) options.username = mqttUserVal;
       if (mqttPassVal) options.password = mqttPassVal;
+
+      document.getElementById('displayTopicSensor').innerText = topicSensor;
+      document.getElementById('displayTopicStatus').innerText = topicStatus;
 
       try {
         mqttClient = mqtt.connect(brokerUrl, options);
@@ -476,7 +538,7 @@
         mqttClient.on('message', (topic, message) => {
           const msgStr = message.toString().trim();
 
-          // 1. Tangkap Heartbeat Status dari ESP32
+          // 1. Heartbeat Status dari ESP32
           if (topic === topicStatus) {
             if (msgStr.toUpperCase() === 'ONLINE' || msgStr.toUpperCase() === 'READY') {
               triggerEspHeartbeat();
@@ -487,7 +549,7 @@
             return;
           }
 
-          // 2. Tangkap Telemetri Sensor
+          // 2. Telemetri Sensor
           if (topic === topicSensor) {
             triggerEspHeartbeat();
             try {
@@ -503,23 +565,22 @@
             return;
           }
 
-          // 3. Tangkap feedback dari saklar/device
+          // 3. Feedback Saklar/Device (TIDAK memicu triggerEspHeartbeat agar tidak bentrok)
           const dev = devices.find(d => d.topic === topic);
           if (dev) {
-            
             if (msgStr === 'ON') dev.status = true;
-  else if (msgStr === 'OFF') dev.status = false;
-  else {
-    try {
-      const data = JSON.parse(msgStr);
-      if (data.status !== undefined) dev.status = (data.status === 'ON' || data.status === true);
-      if (data.speed !== undefined) dev.speed = data.speed;
-      if (data.temp !== undefined) dev.temp = data.temp;
-    } catch(e){}
-  }
-  saveDevices();
-  renderDevices();
-}
+            else if (msgStr === 'OFF') dev.status = false;
+            else {
+              try {
+                const data = JSON.parse(msgStr);
+                if (data.status !== undefined) dev.status = (data.status === 'ON' || data.status === true);
+                if (data.speed !== undefined) dev.speed = data.speed;
+                if (data.temp !== undefined) dev.temp = data.temp;
+              } catch(e){}
+            }
+            saveDevices();
+            renderDevices();
+          }
         });
 
         mqttClient.on('error', () => setStatusState('offline', 'Disconnected'));
@@ -551,7 +612,7 @@
       mqttClient.publish(device.topic, payload, { retain: false });
     }
 
-    // --- FIREBASE DATABASE & DEVICE LOGIC (UPDATED PARSER) ---
+    // --- FIREBASE DATABASE & DEVICE LOGIC ---
     function loadDevices() {
       db.ref('devices').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -559,7 +620,6 @@
         if (!data) {
           devices = [];
         } else if (Array.isArray(data)) {
-          // Jika data disimpan sebagai Array
           devices = data.filter(item => item !== null).map((item, idx) => ({
             id: item.id || 'dev_' + idx,
             name: item.name || 'Perangkat Tanpa Nama',
@@ -573,7 +633,6 @@
             icon: item.icon || getDeviceDefaultIcon(item.type)
           }));
         } else if (typeof data === 'object') {
-          // Jika data disimpan sebagai Key-Value / Object (misal dari Console)
           devices = Object.keys(data).map(key => {
             const item = data[key];
             return {
@@ -593,6 +652,7 @@
 
         populateRoomFilter();
         renderDevices();
+        renderBillingTable();
         subscribeAllTopics();
       });
     }
@@ -638,81 +698,83 @@
       const filter = document.getElementById('roomFilter').value;
       container.innerHTML = '';
 
-      const filtered = filter === 'ALL' 
-        ? devices 
-        : devices.filter(d => d.room && d.room.trim().toLowerCase() === filter.trim().toLowerCase());
+      const filtered = filter === 'ALL' ? devices : devices.filter(d => d.room === filter);
+
+      calculateStats();
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="col-span-full glass-panel p-8 rounded-2xl text-center text-gray-500"><i class="ph ph-devices text-4xl mb-2 text-gray-600"></i><p>Belum ada alat. Klik "+ Tambah Alat" untuk menambahkan perangkat baru ke database.</p></div>`;
-        calculateStats();
+        container.innerHTML = `
+          <div class="col-span-full glass-panel p-8 rounded-2xl text-center text-gray-500">
+            <i class="ph ph-plug-disconnect text-4xl mb-2 text-gray-600"></i>
+            <p class="text-sm">Belum ada perangkat terdaftar di ruangan ini.</p>
+          </div>`;
         return;
       }
 
-      filtered.forEach(device => {
-        const card = document.createElement('div');
-        card.className = `glass-panel p-6 rounded-2xl border border-white/5 transition-all duration-300 relative group ${device.status ? 'box-glow' : ''}`;
+      filtered.forEach(dev => {
+        const isChecked = dev.status ? 'checked' : '';
+        const cardBg = dev.status ? 'border-cyan-400/40 bg-cyan-950/20 box-glow' : 'border-white/5 bg-gray-900/30';
+        const iconColor = dev.status ? 'text-cyan-400 icon-glow' : 'text-gray-500';
 
         let extraControls = '';
-        if (device.type === 'fan' && device.status) {
-          extraControls = `<div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between"><span class="text-xs text-gray-400">Kecepatan:</span><div class="flex space-x-1"><button onclick="setFanSpeed('${device.id}', 1)" class="px-2.5 py-1 text-xs rounded-lg ${device.speed === 1 ? 'bg-cyan-400 text-black font-bold' : 'bg-white/5 text-gray-400'}">1</button><button onclick="setFanSpeed('${device.id}', 2)" class="px-2.5 py-1 text-xs rounded-lg ${device.speed === 2 ? 'bg-cyan-400 text-black font-bold' : 'bg-white/5 text-gray-400'}">2</button><button onclick="setFanSpeed('${device.id}', 3)" class="px-2.5 py-1 text-xs rounded-lg ${device.speed === 3 ? 'bg-cyan-400 text-black font-bold' : 'bg-white/5 text-gray-400'}">3</button></div></div>`;
-        } else if (device.type === 'ac' && device.status) {
-          extraControls = `<div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between"><span class="text-xs text-gray-400">Set Suhu:</span><div class="flex items-center space-x-2"><button onclick="changeAcTemp('${device.id}', -1)" class="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center text-white font-bold hover:bg-white/20">-</button><span class="text-sm font-bold text-cyan-400">${device.temp || 24}°C</span><button onclick="changeAcTemp('${device.id}', 1)" class="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center text-white font-bold hover:bg-white/20">+</button></div></div>`;
+        if (dev.type === 'fan') {
+          extraControls = `
+            <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-gray-400">
+              <span>Kecepatan:</span>
+              <div class="flex space-x-1">
+                <button onclick="updateDeviceSpeed('${dev.id}', 1)" class="px-2 py-1 rounded ${dev.speed === 1 ? 'bg-cyan-400 text-black font-bold' : 'bg-white/5'}">1</button>
+                <button onclick="updateDeviceSpeed('${dev.id}', 2)" class="px-2 py-1 rounded ${dev.speed === 2 ? 'bg-cyan-400 text-black font-bold' : 'bg-white/5'}">2</button>
+                <button onclick="updateDeviceSpeed('${dev.id}', 3)" class="px-2 py-1 rounded ${dev.speed === 3 ? 'bg-cyan-400 text-black font-bold' : 'bg-white/5'}">3</button>
+              </div>
+            </div>`;
+        } else if (dev.type === 'ac') {
+          extraControls = `
+            <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-gray-400">
+              <span>Suhu AC:</span>
+              <div class="flex items-center space-x-2">
+                <button onclick="updateDeviceTemp('${dev.id}', ${(dev.temp||24)-1})" class="w-6 h-6 rounded bg-white/5 flex items-center justify-center font-bold text-white hover:bg-white/10">-</button>
+                <span class="text-cyan-400 font-bold">${dev.temp || 24}°C</span>
+                <button onclick="updateDeviceTemp('${dev.id}', ${(dev.temp||24)+1})" class="w-6 h-6 rounded bg-white/5 flex items-center justify-center font-bold text-white hover:bg-white/10">+</button>
+              </div>
+            </div>`;
         }
 
-        let iconClass = device.icon || 'ph-power';
-        if (device.type === 'fan' && device.status) {
-          if (device.speed === 1) iconClass += ' spin-slow';
-          else if (device.speed === 2) iconClass += ' spin-med';
-          else iconClass += ' spin-fast';
-        }
-
+        const card = document.createElement('div');
+        card.className = `glass-panel p-6 rounded-2xl border transition-all duration-300 relative ${cardBg}`;
         card.innerHTML = `
-          <div class="flex justify-between items-center mb-4">
-            <div class="w-12 h-12 rounded-xl ${device.status ? 'bg-cyan-400/20' : 'bg-white/5'} flex items-center justify-center transition-all duration-300">
-              <i class="ph-fill ${iconClass} text-2xl ${device.status ? 'icon-glow' : 'text-gray-500'}"></i>
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center">
+              <i class="ph ${dev.icon} text-2xl ${iconColor}"></i>
             </div>
-
             <div class="flex items-center space-x-2">
-              <div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onclick="openEditDeviceModal('${device.id}')" class="p-1.5 text-gray-400 hover:text-cyan-400 bg-white/5 hover:bg-white/10 rounded-lg"><i class="ph ph-pencil-simple text-sm"></i></button>
-                <button onclick="deleteDevice('${device.id}')" class="p-1.5 text-gray-400 hover:text-red-400 bg-white/5 hover:bg-white/10 rounded-lg"><i class="ph ph-trash text-sm"></i></button>
-              </div>
-
-              <div class="relative inline-block w-[50px] align-middle select-none">
-                <input type="checkbox" id="toggle_${device.id}" ${device.status ? 'checked' : ''} onchange="toggleDeviceStatus('${device.id}')" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 opacity-0"/>
-                <label for="toggle_${device.id}" class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer"></label>
-              </div>
+              <input type="checkbox" id="toggle_${dev.id}" class="toggle-checkbox hidden" ${isChecked} onchange="toggleDevice('${dev.id}')">
+              <label for="toggle_${dev.id}" class="toggle-label"></label>
             </div>
           </div>
-
-          <div>
-            <h3 class="text-base font-semibold text-white mb-0.5">${device.name}</h3>
-            <p class="text-xs text-gray-400">${device.room} • ${device.wattage || 0}W</p>
-          </div>
-
+          <h4 class="font-semibold text-white text-base">${dev.name}</h4>
+          <p class="text-xs text-gray-400 mb-1">${dev.room} • <span class="text-cyan-400">${dev.wattage}W</span></p>
+          <p class="text-[10px] text-gray-500 font-mono truncate">Topic: ${dev.topic}</p>
           ${extraControls}
-
-          <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs">
-            <span class="text-gray-500 font-mono text-[10px] truncate max-w-[150px]"><i class="ph ph-broadcast mr-1"></i>${device.topic || '--'}</span>
-            <span class="font-bold ${device.status ? 'text-cyan-400 text-glow' : 'text-gray-500'}">${device.status ? 'ON' : 'OFF'}</span>
+          <div class="mt-4 flex justify-end space-x-2">
+            <button onclick="openEditDeviceModal('${dev.id}')" class="text-xs text-gray-400 hover:text-cyan-400"><i class="ph ph-pencil-simple text-base"></i></button>
+            <button onclick="deleteDevice('${dev.id}')" class="text-xs text-gray-400 hover:text-red-400"><i class="ph ph-trash text-base"></i></button>
           </div>
         `;
         container.appendChild(card);
       });
-
-      calculateStats();
     }
 
-    function toggleDeviceStatus(id) {
-      const device = devices.find(d => d.id === id);
-      if (!device) return;
-      device.status = !device.status;
-      saveDevices();
-      renderDevices();
-      publishDeviceState(device);
+    function toggleDevice(id) {
+      const dev = devices.find(d => d.id === id);
+      if (dev) {
+        dev.status = !dev.status;
+        saveDevices();
+        renderDevices();
+        publishDeviceState(dev);
+      }
     }
 
-    function setFanSpeed(id, speed) {
+    function updateDeviceSpeed(id, speed) {
       const dev = devices.find(d => d.id === id);
       if (dev) {
         dev.speed = speed;
@@ -722,17 +784,89 @@
       }
     }
 
-    function changeAcTemp(id, delta) {
+    function updateDeviceTemp(id, temp) {
+      if (temp < 16 || temp > 30) return;
       const dev = devices.find(d => d.id === id);
       if (dev) {
-        dev.temp = Math.min(30, Math.max(16, (dev.temp || 24) + delta));
+        dev.temp = temp;
         saveDevices();
         renderDevices();
         publishDeviceState(dev);
       }
     }
 
-    // --- MODAL HANDLERS ---
+    // --- FITUR TABEL & KALKULATOR TAGIHAN LISTRIK (BILLING SYSTEM) ---
+    function renderBillingTable() {
+      const tableBody = document.getElementById('billingTableBody');
+      const tariffRate = parseFloat(document.getElementById('plnTariffSelect').value) || 1444.7;
+      
+      tableBody.innerHTML = '';
+
+      if (devices.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-6 text-center text-gray-500">Belum ada perangkat terdaftar untuk dihitung.</td></tr>`;
+        document.getElementById('totalMonthlyKwh').innerText = '0.00';
+        document.getElementById('totalMonthlyCost').innerText = 'Rp 0';
+        document.getElementById('topConsumingDevice').innerText = '-';
+        return;
+      }
+
+      let totalMonthlyKwh = 0;
+      let topDeviceName = '-';
+      let topDeviceKwh = 0;
+
+      devices.forEach(dev => {
+        // Default durasi penggunaan: 8 jam per hari jika belum diatur
+        if (!deviceHours[dev.id]) deviceHours[dev.id] = 8;
+        
+        const hours = deviceHours[dev.id];
+        const dailyKwh = (dev.wattage * hours) / 1000;
+        const monthlyKwh = dailyKwh * 30; // 30 Hari
+        const monthlyCost = monthlyKwh * tariffRate;
+
+        totalMonthlyKwh += monthlyKwh;
+
+        if (monthlyKwh > topDeviceKwh) {
+          topDeviceKwh = monthlyKwh;
+          topDeviceName = `${dev.name} (${dev.wattage}W)`;
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-white/5 transition-colors';
+        tr.innerHTML = `
+          <td class="px-4 py-3 font-medium text-white flex items-center">
+            <i class="ph ${dev.icon} text-cyan-400 text-lg mr-2"></i> ${dev.name}
+          </td>
+          <td class="px-4 py-3 text-gray-400">${dev.room}</td>
+          <td class="px-4 py-3 text-cyan-400 font-mono">${dev.wattage} W</td>
+          <td class="px-4 py-3">
+            <div class="flex items-center space-x-2">
+              <input type="number" min="1" max="24" value="${hours}" onchange="updateDeviceHours('${dev.id}', this.value)" class="w-14 bg-gray-900 border border-white/10 rounded px-2 py-1 text-center text-white text-xs focus:outline-none focus:border-cyan-400">
+              <span class="text-gray-500">Jam/Hari</span>
+            </div>
+          </td>
+          <td class="px-4 py-3 font-mono text-white">${monthlyKwh.toFixed(2)} kWh</td>
+          <td class="px-4 py-3 text-right font-semibold text-green-400 font-mono">${formatRupiah(monthlyCost)}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+
+      const totalCost = totalMonthlyKwh * tariffRate;
+      document.getElementById('totalMonthlyKwh').innerText = totalMonthlyKwh.toFixed(2);
+      document.getElementById('totalMonthlyCost').innerText = formatRupiah(totalCost);
+      document.getElementById('topConsumingDevice').innerText = topDeviceName;
+    }
+
+    function updateDeviceHours(id, hours) {
+      const val = Math.max(1, Math.min(24, Number(hours) || 1));
+      deviceHours[id] = val;
+      renderBillingTable();
+    }
+
+    function formatRupiah(amount) {
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
+    }
+
+    // --- MODAL & FORM HANDLERS ---
     function openAddDeviceModal() {
       document.getElementById('modalTitle').innerText = 'Tambah Perangkat Baru';
       document.getElementById('formDeviceId').value = '';
@@ -743,13 +877,15 @@
     function openEditDeviceModal(id) {
       const dev = devices.find(d => d.id === id);
       if (!dev) return;
+
       document.getElementById('modalTitle').innerText = 'Edit Perangkat';
       document.getElementById('formDeviceId').value = dev.id;
       document.getElementById('formDeviceName').value = dev.name;
       document.getElementById('formDeviceType').value = dev.type;
       document.getElementById('formDeviceRoom').value = dev.room;
       document.getElementById('formDeviceTopic').value = dev.topic;
-      document.getElementById('formDeviceWattage').value = dev.wattage || 0;
+      document.getElementById('formDeviceWattage').value = dev.wattage;
+
       document.getElementById('deviceModal').classList.remove('hidden');
     }
 
@@ -760,44 +896,54 @@
     function handleDeviceFormSubmit(e) {
       e.preventDefault();
       const id = document.getElementById('formDeviceId').value;
-      const name = document.getElementById('formDeviceName').value;
+      const name = document.getElementById('formDeviceName').value.trim();
       const type = document.getElementById('formDeviceType').value;
-      const room = document.getElementById('formDeviceRoom').value;
-      const topic = document.getElementById('formDeviceTopic').value;
-      const wattage = parseInt(document.getElementById('formDeviceWattage').value) || 0;
-
-      const icon = getDeviceDefaultIcon(type);
+      const room = document.getElementById('formDeviceRoom').value.trim();
+      const topic = document.getElementById('formDeviceTopic').value.trim();
+      const wattage = Number(document.getElementById('formDeviceWattage').value) || 0;
 
       if (id) {
         const dev = devices.find(d => d.id === id);
         if (dev) {
-          dev.name = name; dev.type = type; dev.room = room; dev.topic = topic; dev.wattage = wattage; dev.icon = icon;
+          dev.name = name;
+          dev.type = type;
+          dev.room = room;
+          dev.topic = topic;
+          dev.wattage = wattage;
+          dev.icon = getDeviceDefaultIcon(type);
         }
       } else {
-        devices.push({ id: 'dev_' + Date.now(), name, type, room, topic, wattage, icon, status: false, speed: 1, temp: 24 });
+        const newDev = {
+          id: 'dev_' + Date.now(),
+          name, type, room, topic, wattage,
+          status: false,
+          speed: 1,
+          temp: 24,
+          icon: getDeviceDefaultIcon(type)
+        };
+        devices.push(newDev);
       }
 
       saveDevices();
       closeDeviceModal();
-
-      if (mqttClient && mqttClient.connected) {
-        mqttClient.subscribe(topic);
-      }
+      subscribeAllTopics();
+      renderBillingTable();
     }
 
     function deleteDevice(id) {
-      if (confirm('Hapus perangkat ini dari database?')) {
+      if (confirm('Yakin ingin menghapus perangkat ini?')) {
         devices = devices.filter(d => d.id !== id);
         saveDevices();
+        renderBillingTable();
       }
     }
 
     function openMqttModal() {
       document.getElementById('mqttBrokerUrl').value = brokerUrl;
-      document.getElementById('mqttTopicSensor').value = topicSensor;
-      document.getElementById('mqttTopicStatus').value = topicStatus;
       document.getElementById('mqttUsername').value = mqttUserVal;
       document.getElementById('mqttPassword').value = mqttPassVal;
+      document.getElementById('mqttTopicSensor').value = topicSensor;
+      document.getElementById('mqttTopicStatus').value = topicStatus;
       document.getElementById('mqttModal').classList.remove('hidden');
     }
 
@@ -808,23 +954,22 @@
     function handleMqttFormSubmit(e) {
       e.preventDefault();
       brokerUrl = document.getElementById('mqttBrokerUrl').value.trim();
-      topicSensor = document.getElementById('mqttTopicSensor').value.trim();
-      topicStatus = document.getElementById('mqttTopicStatus').value.trim();
       mqttUserVal = document.getElementById('mqttUsername').value.trim();
       mqttPassVal = document.getElementById('mqttPassword').value.trim();
+      topicSensor = document.getElementById('mqttTopicSensor').value.trim();
+      topicStatus = document.getElementById('mqttTopicStatus').value.trim();
 
       localStorage.setItem('nexus_mqtt_broker', brokerUrl);
-      localStorage.setItem('nexus_mqtt_sensor', topicSensor);
-      localStorage.setItem('nexus_mqtt_status', topicStatus);
       localStorage.setItem('nexus_mqtt_user', mqttUserVal);
       localStorage.setItem('nexus_mqtt_pass', mqttPassVal);
+      localStorage.setItem('nexus_mqtt_sensor', topicSensor);
+      localStorage.setItem('nexus_mqtt_status', topicStatus);
 
-      updateTopicDisplays();
       closeMqttModal();
       connectMQTT();
     }
 
-    // --- CHART REALTIME & UTILS ---
+    // --- CHART TELEMETRI SENSOR ---
     function initChart() {
       const ctx = document.getElementById('sensorChart').getContext('2d');
       sensorChart = new Chart(ctx, {
@@ -832,16 +977,31 @@
         data: {
           labels: [],
           datasets: [
-            { label: 'Suhu (°C)', data: [], borderColor: '#f59e0b', fill: false, tension: 0.4 },
-            { label: 'Kelembaban (%)', data: [], borderColor: '#00ff66', borderDash: [5, 5], tension: 0.4 }
+            {
+              label: 'Suhu (°C)',
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              data: [],
+              fill: true,
+              tension: 0.4
+            },
+            {
+              label: 'Kelembaban (%)',
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              data: [],
+              fill: true,
+              tension: 0.4
+            }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#9ca3af' } } },
           scales: {
-            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
-            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } }
+            x: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.05)' } }
           }
         }
       });
@@ -863,37 +1023,8 @@
       sensorChart.update();
     }
 
-    function toggleMobileSidebar() {
-      document.getElementById('sidebar').classList.toggle('-translate-x-full');
-      document.getElementById('sidebarOverlay').classList.toggle('hidden');
-    }
-
-    function updateTopicDisplays() {
-      if(document.getElementById('displayTopicSensor')) document.getElementById('displayTopicSensor').innerText = topicSensor;
-      if(document.getElementById('displayTopicStatus')) document.getElementById('displayTopicStatus').innerText = topicStatus;
-    }
-
-    function initClock() {
-      function update() {
-        const now = new Date();
-        document.getElementById('liveClock').innerText = now.toLocaleTimeString('id-ID') + ' WIB';
-        const hrs = now.getHours();
-        let greeting = "Selamat Malam";
-        if (hrs >= 4 && hrs < 11) greeting = "Selamat Pagi";
-        else if (hrs >= 11 && hrs < 15) greeting = "Selamat Siang";
-        else if (hrs >= 15 && hrs < 18) greeting = "Selamat Sore";
-        document.getElementById('greetingText').innerText = greeting;
-      }
-      update();
-      setInterval(update, 1000);
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      checkAuth();
-      initClock();
-      initChart();
-      updateTopicDisplays();
-    });
+    // JALANKAN APLIKASI
+    document.addEventListener('DOMContentLoaded', checkAuth);
   </script>
 </body>
 </html>

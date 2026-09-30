@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EXWANN Smart Home Dashboard</title>
+  <title>exWann Smart Home Dashboard</title>
 
   <!-- 1. FIREBASE COMPAT CDN -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -42,11 +42,9 @@
     .toggle-label { width: 50px; height: 26px; background-color: #1a1c29; border: 1px solid rgba(255,255,255,0.2); border-radius: 9999px; position: relative; cursor: pointer; transition: all 0.3s ease; }
     .toggle-label:after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background-color: #6b7280; border-radius: 50%; transition: all 0.3s ease; }
 
-    /* Indicator Bulat Status */
     .status-dot.online { background-color: #00ff66; box-shadow: 0 0 10px #00ff66; }
     .status-dot.offline { background-color: #ff3333; box-shadow: 0 0 10px #ff3333; }
 
-    /* Print Styles untuk Cetak Tagihan */
     @media print {
       body * { visibility: hidden; }
       #billingSection, #billingSection * { visibility: visible; }
@@ -67,11 +65,11 @@
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-400/10 text-cyan-400 mb-2 border border-cyan-400/30">
           <i class="ph-fill ph-hexagon text-4xl icon-glow"></i>
         </div>
-        <h2 class="text-2xl font-bold text-white tracking-wide">EXWANN DASHBOARD</h2>
+        <h2 class="text-2xl font-bold text-white tracking-wide">exWann DASHBOARD</h2>
         <p class="text-xs text-gray-400">Silakan masuk untuk mengakses sistem IoT</p>
       </div>
 
-      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+      <form id="loginForm" onsubmit="return handleLogin(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1">Username</label>
           <input type="text" id="loginUser" required placeholder="Masukkan username" class="w-full bg-gray-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-400 transition-colors">
@@ -99,12 +97,11 @@
     <div class="h-20 flex items-center justify-between px-8 border-b border-white/5">
       <div class="flex items-center">
         <i class="ph-fill ph-hexagon text-3xl text-cyan-400 mr-3 icon-glow"></i>
-        <h1 class="text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">EXWANN</h1>
+        <h1 class="text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">exWann</h1>
       </div>
       <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-400"><i class="ph ph-x text-2xl"></i></button>
     </div>
     
-    <!-- Navigasi dengan Efek Glow Dinamis -->
     <nav class="flex-1 px-4 py-6 space-y-2">
       <a href="#" onclick="setActiveNav(this)" class="nav-item flex items-center px-4 py-3 rounded-xl bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 text-glow transition-all duration-300">
         <i class="ph ph-squares-four text-xl mr-3"></i> Dashboard
@@ -138,13 +135,12 @@
       <div class="flex items-center">
         <button onclick="toggleMobileSidebar()" class="mr-4 md:hidden text-gray-300"><i class="ph ph-list text-2xl"></i></button>
         <div>
-          <h2 class="text-lg font-medium text-gray-200"><span id="greetingText">Selamat Datang</span>, <span class="text-white font-semibold" id="headerUser">Admin</span></h2>
+          <h2 class="text-lg font-medium text-gray-200"><span id="greetingText">Selamat Datang</span>, <span class="text-white font-semibold" id="headerUser">exWann</span></h2>
           <p id="liveClock" class="text-xs text-cyan-400 font-mono">00:00:00 WIB</p>
         </div>
       </div>
       
       <div class="flex items-center space-x-3">
-        <!-- Status Indikator ESP32 -->
         <div class="flex items-center glass-panel px-4 py-2 rounded-full border border-white/10">
           <div id="statusDot" class="w-2.5 h-2.5 rounded-full status-dot offline mr-2.5"></div>
           <span id="statusText" class="text-xs md:text-sm font-medium text-red-400">Connecting...</span>
@@ -198,7 +194,7 @@
         <div id="devicesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
       </div>
 
-      <!-- Section Billing / Kalkulator Tagihan Listrik Real-time -->
+      <!-- Section Billing -->
       <div id="billingSection" class="glass-panel p-6 rounded-2xl space-y-6">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-4">
           <div>
@@ -224,7 +220,6 @@
           </div>
         </div>
 
-        <!-- Metric Highlight Tagihan -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="bg-gray-900/60 p-4 rounded-xl border border-white/5">
             <p class="text-xs text-gray-400 mb-1">Total Konsumsi Real-Time</p>
@@ -240,7 +235,6 @@
           </div>
         </div>
 
-        <!-- Tabel Perhitungan Tagihan -->
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs text-gray-300">
             <thead class="text-xs uppercase bg-white/5 text-gray-400 border-b border-white/10">
@@ -254,7 +248,6 @@
               </tr>
             </thead>
             <tbody id="billingTableBody" class="divide-y divide-white/5">
-              <!-- Data diisi oleh JS -->
             </tbody>
           </table>
         </div>
@@ -262,7 +255,7 @@
     </div>
   </main>
 
-  <!-- Modal Tambah / Edit Device -->
+  <!-- Modals -->
   <div id="deviceModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="glass-panel p-6 rounded-2xl w-full max-w-md border border-white/10 space-y-4">
       <div class="flex justify-between items-center border-b border-white/10 pb-3">
@@ -304,7 +297,6 @@
     </div>
   </div>
 
-  <!-- Modal Pengaturan Akun Dashboard -->
   <div id="accountModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="glass-panel p-6 rounded-2xl w-full max-w-md border border-white/10 space-y-4">
       <div class="flex justify-between items-center border-b border-white/10 pb-3">
@@ -328,7 +320,6 @@
     </div>
   </div>
 
-  <!-- Modal Setting MQTT -->
   <div id="mqttModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="glass-panel p-6 rounded-2xl w-full max-w-md border border-white/10 space-y-4">
       <div class="flex justify-between items-center border-b border-white/10 pb-3">
@@ -367,9 +358,7 @@
   </div>
 
   <script>
-    // =========================================================================
-    // BAGIAN 1: KONFIGURASI SISTEM
-    // =========================================================================
+    // CONFIG SYSTEM
     const CONFIG = {
       firebase: {
         apiKey: "AIzaSyBaOuGJ0xEfJZsu9D0oW6TkStS0n7SBj7g",
@@ -391,85 +380,93 @@
       espTimeoutMs: 20000 
     };
 
-    // Inisialisasi Firebase
-    if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebase);
-    const db = firebase.database();
+    // Safe Firebase Init
+    let db = null;
+    try {
+      if (typeof firebase !== 'undefined') {
+        if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebase);
+        db = firebase.database();
+      }
+    } catch(err) {
+      console.warn("Firebase Init Error:", err);
+    }
 
-    // Variable Global State
+    // Global State
     let devices = [];
     let mqttClient = null;
     let espTimeoutTimer = null;
     let sensorChart = null;
 
-    let brokerUrl = localStorage.getItem('exwann_mqtt_broker') || CONFIG.defaultMqtt.brokerUrl;
-    let topicSensor = localStorage.getItem('exwann_mqtt_sensor') || CONFIG.defaultMqtt.topicSensor;
-    let topicStatus = localStorage.getItem('exwann_mqtt_status') || CONFIG.defaultMqtt.topicStatus;
-    let mqttUserVal = localStorage.getItem('exwann_mqtt_user') || CONFIG.defaultMqtt.user;
-    let mqttPassVal = localStorage.getItem('exwann_mqtt_pass') || CONFIG.defaultMqtt.pass;
+    let brokerUrl = localStorage.getItem('exwann_mqtt_broker') || localStorage.getItem('nexus_mqtt_broker') || CONFIG.defaultMqtt.brokerUrl;
+    let topicSensor = localStorage.getItem('exwann_mqtt_sensor') || localStorage.getItem('nexus_mqtt_sensor') || CONFIG.defaultMqtt.topicSensor;
+    let topicStatus = localStorage.getItem('exwann_mqtt_status') || localStorage.getItem('nexus_mqtt_status') || CONFIG.defaultMqtt.topicStatus;
+    let mqttUserVal = localStorage.getItem('exwann_mqtt_user') || localStorage.getItem('nexus_mqtt_user') || CONFIG.defaultMqtt.user;
+    let mqttPassVal = localStorage.getItem('exwann_mqtt_pass') || localStorage.getItem('nexus_mqtt_pass') || CONFIG.defaultMqtt.pass;
 
-    // --- MANAJEMEN EFEK GLOW SIDEBAR NAVIGASI ---
+    // Sidebar Glow Manager
     function setActiveNav(element) {
       const navItems = document.querySelectorAll('.nav-item');
       navItems.forEach(item => {
         item.className = "nav-item flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent transition-all duration-300";
       });
-      element.className = "nav-item flex items-center px-4 py-3 rounded-xl bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 text-glow transition-all duration-300";
-      
-      // Auto close sidebar di versi HP saat diklik
-      if (window.innerWidth < 768) {
-        toggleMobileSidebar();
+      if (element) {
+        element.className = "nav-item flex items-center px-4 py-3 rounded-xl bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 text-glow transition-all duration-300";
       }
+      if (window.innerWidth < 768) toggleMobileSidebar();
     }
 
-    // --- AUTENTIKASI ---
+    // Auth & Credential Handler
     function getAdminCreds() {
       return {
-        user: localStorage.getItem('exwann_admin_user') || CONFIG.defaultAdmin.user,
-        pass: localStorage.getItem('exwann_admin_pass') || CONFIG.defaultAdmin.pass
+        user: localStorage.getItem('exwann_admin_user') || localStorage.getItem('nexus_admin_user') || CONFIG.defaultAdmin.user,
+        pass: localStorage.getItem('exwann_admin_pass') || localStorage.getItem('nexus_admin_pass') || CONFIG.defaultAdmin.pass
       };
     }
 
     function checkAuth() {
-      const isLoggedIn = sessionStorage.getItem('exwann_is_logged_in');
+      const isLoggedIn = sessionStorage.getItem('exwann_is_logged_in') || sessionStorage.getItem('nexus_is_logged_in');
       const loginScreen = document.getElementById('loginScreen');
       const creds = getAdminCreds();
 
-      if (document.getElementById('headerUser')) document.getElementById('headerUser').innerText = creds.user;
+      const headerUser = document.getElementById('headerUser');
+      if (headerUser) headerUser.innerText = creds.user;
 
       if (isLoggedIn === 'true') {
-        loginScreen.classList.add('hidden');
+        if (loginScreen) loginScreen.classList.add('hidden');
         loadDevices();
         connectMQTT();
         initChart();
         updateClock();
         setInterval(updateClock, 1000);
-
-        // Timer Real-Time untuk memperbarui durasi dan tabel billing setiap 1 detik
         setInterval(renderBillingTable, 1000);
-
       } else {
-        loginScreen.classList.remove('hidden');
+        if (loginScreen) loginScreen.classList.remove('hidden');
       }
     }
 
     function handleLogin(e) {
-      e.preventDefault();
+      if (e) e.preventDefault();
       const creds = getAdminCreds();
-      const inputUser = document.getElementById('loginUser').value.trim();
-      const inputPass = document.getElementById('loginPass').value.trim();
+      const userEl = document.getElementById('loginUser');
+      const passEl = document.getElementById('loginPass');
       const errorEl = document.getElementById('loginError');
+
+      const inputUser = userEl ? userEl.value.trim() : '';
+      const inputPass = passEl ? passEl.value.trim() : '';
 
       if (inputUser === creds.user && inputPass === creds.pass) {
         sessionStorage.setItem('exwann_is_logged_in', 'true');
-        errorEl.classList.add('hidden');
+        if (errorEl) errorEl.classList.add('hidden');
         checkAuth();
       } else {
-        errorEl.classList.remove('hidden');
+        if (errorEl) errorEl.classList.remove('hidden');
       }
+      return false;
     }
 
     function handleLogout() {
       sessionStorage.removeItem('exwann_is_logged_in');
+      sessionStorage.removeItem('nexus_is_logged_in');
       location.reload();
     }
 
@@ -485,7 +482,7 @@
     }
 
     function handleAccountFormSubmit(e) {
-      e.preventDefault();
+      if (e) e.preventDefault();
       const newU = document.getElementById('accUser').value.trim();
       const newP = document.getElementById('accPass').value.trim();
 
@@ -499,21 +496,25 @@
     }
 
     function updateClock() {
-      const now = new Date();
-      document.getElementById('liveClock').innerText = now.toLocaleTimeString('id-ID') + ' WIB';
+      const clockEl = document.getElementById('liveClock');
+      if (clockEl) {
+        const now = new Date();
+        clockEl.innerText = now.toLocaleTimeString('id-ID') + ' WIB';
+      }
     }
 
     function toggleMobileSidebar() {
       const sidebar = document.getElementById('sidebar');
       const overlay = document.getElementById('sidebarOverlay');
-      sidebar.classList.toggle('-translate-x-full');
-      overlay.classList.toggle('hidden');
+      if (sidebar) sidebar.classList.toggle('-translate-x-full');
+      if (overlay) overlay.classList.toggle('hidden');
     }
 
-    // --- MANAJEMEN STATUS ESP32 ---
+    // Status ESP32
     function setStatusState(state, message) {
       const dot = document.getElementById('statusDot');
       const txt = document.getElementById('statusText');
+      if (!dot || !txt) return;
 
       if (state === 'online') {
         dot.className = 'w-2.5 h-2.5 rounded-full status-dot online mr-2.5';
@@ -538,8 +539,10 @@
       }, CONFIG.espTimeoutMs);
     }
 
-    // --- MQTT ENGINE ---
+    // MQTT Engine
     function connectMQTT() {
+      if (typeof mqtt === 'undefined') return;
+
       if (mqttClient) { 
         try { mqttClient.end(true); } catch(e){} 
       }
@@ -554,8 +557,10 @@
       if (mqttUserVal) options.username = mqttUserVal;
       if (mqttPassVal) options.password = mqttPassVal;
 
-      document.getElementById('displayTopicSensor').innerText = topicSensor;
-      document.getElementById('displayTopicStatus').innerText = topicStatus;
+      const dTopicSensor = document.getElementById('displayTopicSensor');
+      const dTopicStatus = document.getElementById('displayTopicStatus');
+      if (dTopicSensor) dTopicSensor.innerText = topicSensor;
+      if (dTopicStatus) dTopicStatus.innerText = topicStatus;
 
       try {
         mqttClient = mqtt.connect(brokerUrl, options);
@@ -567,7 +572,6 @@
         mqttClient.on('message', (topic, message) => {
           const msgStr = message.toString().trim();
 
-          // 1. Heartbeat Status dari ESP32
           if (topic === topicStatus) {
             if (msgStr.toUpperCase() === 'ONLINE' || msgStr.toUpperCase() === 'READY') {
               triggerEspHeartbeat();
@@ -578,23 +582,23 @@
             return;
           }
 
-          // 2. Telemetri Sensor
           if (topic === topicSensor) {
             triggerEspHeartbeat();
             try {
               const data = JSON.parse(msgStr);
               if (data.temp !== undefined) {
-                document.getElementById('currentTemp').innerText = data.temp;
+                const curTemp = document.getElementById('currentTemp');
+                if (curTemp) curTemp.innerText = data.temp;
                 pushChartData(data.temp, data.hum || 0);
               }
               if (data.hum !== undefined) {
-                document.getElementById('currentHum').innerText = data.hum;
+                const curHum = document.getElementById('currentHum');
+                if (curHum) curHum.innerText = data.hum;
               }
             } catch(e){}
             return;
           }
 
-          // 3. Feedback Saklar/Device (Atur timer durasi nyala)
           const dev = devices.find(d => d.topic === topic);
           if (dev) {
             let isTargetOn = false;
@@ -644,33 +648,18 @@
       mqttClient.publish(device.topic, payload, { retain: false });
     }
 
-    // --- FIREBASE DATABASE & DEVICE LOGIC ---
+    // Firebase & Device Methods
     function loadDevices() {
-      db.ref('devices').on('value', (snapshot) => {
-        const data = snapshot.val();
-        
-        if (!data) {
-          devices = [];
-        } else if (Array.isArray(data)) {
-          devices = data.filter(item => item !== null).map((item, idx) => ({
-            id: item.id || 'dev_' + idx,
-            name: item.name || 'Perangkat Tanpa Nama',
-            type: item.type || 'light',
-            room: item.room || 'Umum',
-            topic: item.topic || '',
-            wattage: Number(item.wattage) || 0,
-            status: item.status === true || item.status === 'ON',
-            speed: item.speed || 1,
-            temp: item.temp || 24,
-            icon: item.icon || getDeviceDefaultIcon(item.type),
-            totalActiveSeconds: Number(item.totalActiveSeconds) || 0,
-            lastTurnedOn: item.lastTurnedOn || null
-          }));
-        } else if (typeof data === 'object') {
-          devices = Object.keys(data).map(key => {
-            const item = data[key];
-            return {
-              id: item.id || key,
+      if (!db) return;
+      try {
+        db.ref('devices').on('value', (snapshot) => {
+          const data = snapshot.val();
+          
+          if (!data) {
+            devices = [];
+          } else if (Array.isArray(data)) {
+            devices = data.filter(item => item !== null).map((item, idx) => ({
+              id: item.id || 'dev_' + idx,
               name: item.name || 'Perangkat Tanpa Nama',
               type: item.type || 'light',
               room: item.room || 'Umum',
@@ -682,15 +671,35 @@
               icon: item.icon || getDeviceDefaultIcon(item.type),
               totalActiveSeconds: Number(item.totalActiveSeconds) || 0,
               lastTurnedOn: item.lastTurnedOn || null
-            };
-          });
-        }
+            }));
+          } else if (typeof data === 'object') {
+            devices = Object.keys(data).map(key => {
+              const item = data[key];
+              return {
+                id: item.id || key,
+                name: item.name || 'Perangkat Tanpa Nama',
+                type: item.type || 'light',
+                room: item.room || 'Umum',
+                topic: item.topic || '',
+                wattage: Number(item.wattage) || 0,
+                status: item.status === true || item.status === 'ON',
+                speed: item.speed || 1,
+                temp: item.temp || 24,
+                icon: item.icon || getDeviceDefaultIcon(item.type),
+                totalActiveSeconds: Number(item.totalActiveSeconds) || 0,
+                lastTurnedOn: item.lastTurnedOn || null
+              };
+            });
+          }
 
-        populateRoomFilter();
-        renderDevices();
-        renderBillingTable();
-        subscribeAllTopics();
-      });
+          populateRoomFilter();
+          renderDevices();
+          renderBillingTable();
+          subscribeAllTopics();
+        });
+      } catch(e) {
+        console.warn("Load devices error:", e);
+      }
     }
 
     function getDeviceDefaultIcon(type) {
@@ -702,15 +711,19 @@
     }
 
     function saveDevices() {
-      db.ref('devices').set(devices);
+      if (db) db.ref('devices').set(devices);
       calculateStats();
     }
 
     function calculateStats() {
       const activeDevs = devices.filter(d => d.status);
-      document.getElementById('activeDevicesCount').innerText = activeDevs.length;
-      document.getElementById('totalDevicesCount').innerText = `/ ${devices.length} Total`;
-      document.getElementById('activeWattage').innerText = activeDevs.reduce((acc, d) => acc + (d.wattage || 0), 0);
+      const activeDevCountEl = document.getElementById('activeDevicesCount');
+      const totalDevCountEl = document.getElementById('totalDevicesCount');
+      const activeWattageEl = document.getElementById('activeWattage');
+
+      if (activeDevCountEl) activeDevCountEl.innerText = activeDevs.length;
+      if (totalDevCountEl) totalDevCountEl.innerText = `/ ${devices.length} Total`;
+      if (activeWattageEl) activeWattageEl.innerText = activeDevs.reduce((acc, d) => acc + (d.wattage || 0), 0);
     }
 
     function populateRoomFilter() {
@@ -731,7 +744,9 @@
 
     function renderDevices() {
       const container = document.getElementById('devicesGrid');
-      const filter = document.getElementById('roomFilter').value;
+      if (!container) return;
+      const filterEl = document.getElementById('roomFilter');
+      const filter = filterEl ? filterEl.value : 'ALL';
       container.innerHTML = '';
 
       const filtered = filter === 'ALL' ? devices : devices.filter(d => d.room === filter);
@@ -800,7 +815,6 @@
       });
     }
 
-    // Mengubah Status Saklar & Mengukur Waktu Terpakai
     function setDeviceStatusState(dev, targetStatus) {
       if (dev.status === targetStatus) return;
 
@@ -849,7 +863,6 @@
       }
     }
 
-    // --- HITUNG LOGIKA WAKTU REAL-TIME PADA TAGIHAN ---
     function getDeviceTotalActiveSeconds(dev) {
       let secs = dev.totalActiveSeconds || 0;
       if (dev.status && dev.lastTurnedOn) {
@@ -862,23 +875,25 @@
       const hours = Math.floor(totalSeconds / 3600);
       const mins = Math.floor((totalSeconds % 3600) / 60);
       const secs = totalSeconds % 60;
-
       return `${String(hours).padStart(2, '0')}j ${String(mins).padStart(2, '0')}m ${String(secs).padStart(2, '0')}s`;
     }
 
-    // --- FITUR TABEL & KALKULATOR TAGIHAN LISTRIK REAL-TIME ---
     function renderBillingTable() {
       const tableBody = document.getElementById('billingTableBody');
-      const tariffRate = parseFloat(document.getElementById('plnTariffSelect').value) || 1444.7;
+      const selectEl = document.getElementById('plnTariffSelect');
+      const tariffRate = selectEl ? parseFloat(selectEl.value) || 1444.7 : 1444.7;
       
       if (!tableBody) return;
       tableBody.innerHTML = '';
 
       if (devices.length === 0) {
         tableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-6 text-center text-gray-500">Belum ada perangkat terdaftar untuk dihitung.</td></tr>`;
-        document.getElementById('totalMonthlyKwh').innerText = '0.0000';
-        document.getElementById('totalMonthlyCost').innerText = 'Rp 0';
-        document.getElementById('topConsumingDevice').innerText = '-';
+        const totalKwhEl = document.getElementById('totalMonthlyKwh');
+        const totalCostEl = document.getElementById('totalMonthlyCost');
+        const topDevEl = document.getElementById('topConsumingDevice');
+        if (totalKwhEl) totalKwhEl.innerText = '0.0000';
+        if (totalCostEl) totalCostEl.innerText = 'Rp 0';
+        if (topDevEl) topDevEl.innerText = '-';
         return;
       }
 
@@ -924,9 +939,12 @@
       });
 
       const grandTotalCost = totalOverallKwh * tariffRate;
-      document.getElementById('totalMonthlyKwh').innerText = totalOverallKwh.toFixed(4);
-      document.getElementById('totalMonthlyCost').innerText = formatRupiah(grandTotalCost);
-      document.getElementById('topConsumingDevice').innerText = topDeviceName;
+      const totalKwhEl = document.getElementById('totalMonthlyKwh');
+      const totalCostEl = document.getElementById('totalMonthlyCost');
+      const topDevEl = document.getElementById('topConsumingDevice');
+      if (totalKwhEl) totalKwhEl.innerText = totalOverallKwh.toFixed(4);
+      if (totalCostEl) totalCostEl.innerText = formatRupiah(grandTotalCost);
+      if (topDevEl) topDevEl.innerText = topDeviceName;
     }
 
     function resetAllDeviceDurations() {
@@ -948,7 +966,7 @@
       return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
     }
 
-    // --- MODAL & FORM HANDLERS ---
+    // Modal Operations
     function openAddDeviceModal() {
       document.getElementById('modalTitle').innerText = 'Tambah Perangkat Baru';
       document.getElementById('formDeviceId').value = '';
@@ -976,7 +994,7 @@
     }
 
     function handleDeviceFormSubmit(e) {
-      e.preventDefault();
+      if (e) e.preventDefault();
       const id = document.getElementById('formDeviceId').value;
       const name = document.getElementById('formDeviceName').value.trim();
       const type = document.getElementById('formDeviceType').value;
@@ -999,3 +1017,126 @@
           id: 'dev_' + Date.now(),
           name, type, room, topic, wattage,
           status: false,
+          speed: 1,
+          temp: 24,
+          icon: getDeviceDefaultIcon(type),
+          totalActiveSeconds: 0,
+          lastTurnedOn: null
+        };
+        devices.push(newDev);
+      }
+
+      saveDevices();
+      closeDeviceModal();
+      subscribeAllTopics();
+      renderBillingTable();
+    }
+
+    function deleteDevice(id) {
+      if (confirm('Yakin ingin menghapus perangkat ini?')) {
+        devices = devices.filter(d => d.id !== id);
+        saveDevices();
+        renderBillingTable();
+      }
+    }
+
+    function openMqttModal() {
+      document.getElementById('mqttBrokerUrl').value = brokerUrl;
+      document.getElementById('mqttUsername').value = mqttUserVal;
+      document.getElementById('mqttPassword').value = mqttPassVal;
+      document.getElementById('mqttTopicSensor').value = topicSensor;
+      document.getElementById('mqttTopicStatus').value = topicStatus;
+      document.getElementById('mqttModal').classList.remove('hidden');
+    }
+
+    function closeMqttModal() {
+      document.getElementById('mqttModal').classList.add('hidden');
+    }
+
+    function handleMqttFormSubmit(e) {
+      if (e) e.preventDefault();
+      brokerUrl = document.getElementById('mqttBrokerUrl').value.trim();
+      mqttUserVal = document.getElementById('mqttUsername').value.trim();
+      mqttPassVal = document.getElementById('mqttPassword').value.trim();
+      topicSensor = document.getElementById('mqttTopicSensor').value.trim();
+      topicStatus = document.getElementById('mqttTopicStatus').value.trim();
+
+      localStorage.setItem('exwann_mqtt_broker', brokerUrl);
+      localStorage.setItem('exwann_mqtt_user', mqttUserVal);
+      localStorage.setItem('exwann_mqtt_pass', mqttPassVal);
+      localStorage.setItem('exwann_mqtt_sensor', topicSensor);
+      localStorage.setItem('exwann_mqtt_status', topicStatus);
+
+      closeMqttModal();
+      connectMQTT();
+    }
+
+    function initChart() {
+      const canvas = document.getElementById('sensorChart');
+      if (!canvas || typeof Chart === 'undefined') return;
+
+      const ctx = canvas.getContext('2d');
+      sensorChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Suhu (°C)',
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              data: [],
+              fill: true,
+              tension: 0.4
+            },
+            {
+              label: 'Kelembaban (%)',
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              data: [],
+              fill: true,
+              tension: 0.4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#9ca3af' } } },
+          scales: {
+            x: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          }
+        }
+      });
+    }
+
+    function pushChartData(temp, hum) {
+      if (!sensorChart) return;
+      const nowStr = new Date().toLocaleTimeString('id-ID');
+
+      if (sensorChart.data.labels.length >= 10) {
+        sensorChart.data.labels.shift();
+        sensorChart.data.datasets[0].data.shift();
+        sensorChart.data.datasets[1].data.shift();
+      }
+
+      sensorChart.data.labels.push(nowStr);
+      sensorChart.data.datasets[0].data.push(temp);
+      sensorChart.data.datasets[1].data.push(hum);
+      sensorChart.update();
+    }
+
+    // Bind ke window
+    window.handleLogin = handleLogin;
+    window.handleLogout = handleLogout;
+    window.setActiveNav = setActiveNav;
+    window.toggleMobileSidebar = toggleMobileSidebar;
+
+    // Run Auth Check
+    document.addEventListener('DOMContentLoaded', checkAuth);
+  </script>
+</body>
+</html>
+
+

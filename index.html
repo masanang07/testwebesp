@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>exWann Smart Home Dashboard</title>
+  <title>EXWANN Smart Home Dashboard</title>
 
   <!-- 1. FIREBASE COMPAT CDN -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -67,7 +67,7 @@
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-400/10 text-cyan-400 mb-2 border border-cyan-400/30">
           <i class="ph-fill ph-hexagon text-4xl icon-glow"></i>
         </div>
-        <h2 class="text-2xl font-bold text-white tracking-wide">exWann DASHBOARD</h2>
+        <h2 class="text-2xl font-bold text-white tracking-wide">EXWANN DASHBOARD</h2>
         <p class="text-xs text-gray-400">Silakan masuk untuk mengakses sistem IoT</p>
       </div>
 
@@ -99,24 +99,34 @@
     <div class="h-20 flex items-center justify-between px-8 border-b border-white/5">
       <div class="flex items-center">
         <i class="ph-fill ph-hexagon text-3xl text-cyan-400 mr-3 icon-glow"></i>
-        <h1 class="text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">exWann</h1>
+        <h1 class="text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">EXWANN</h1>
       </div>
       <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-400"><i class="ph ph-x text-2xl"></i></button>
     </div>
+    
+    <!-- Navigasi dengan Efek Glow Dinamis -->
     <nav class="flex-1 px-4 py-6 space-y-2">
-      <a href="#" class="flex items-center px-4 py-3 rounded-xl bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 text-glow"><i class="ph ph-squares-four text-xl mr-3"></i> Dashboard</a>
-      <a href="#devicesSection" class="flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5"><i class="ph ph-devices text-xl mr-3"></i> Perangkat</a>
-      <a href="#telemetrySection" class="flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5"><i class="ph ph-chart-line-up text-xl mr-3"></i> Grafik Sensor</a>
-      <a href="#billingSection" class="flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5"><i class="ph ph-receipt text-xl mr-3"></i> Tagihan Listrik</a>
+      <a href="#" onclick="setActiveNav(this)" class="nav-item flex items-center px-4 py-3 rounded-xl bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 text-glow transition-all duration-300">
+        <i class="ph ph-squares-four text-xl mr-3"></i> Dashboard
+      </a>
+      <a href="#devicesSection" onclick="setActiveNav(this)" class="nav-item flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent transition-all duration-300">
+        <i class="ph ph-devices text-xl mr-3"></i> Perangkat
+      </a>
+      <a href="#telemetrySection" onclick="setActiveNav(this)" class="nav-item flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent transition-all duration-300">
+        <i class="ph ph-chart-line-up text-xl mr-3"></i> Grafik Sensor
+      </a>
+      <a href="#billingSection" onclick="setActiveNav(this)" class="nav-item flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent transition-all duration-300">
+        <i class="ph ph-receipt text-xl mr-3"></i> Tagihan Listrik
+      </a>
       
-      <button onclick="openAccountModal()" class="w-full flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 text-left transition-colors">
+      <button onclick="openAccountModal()" class="w-full flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent text-left transition-colors">
         <i class="ph ph-user-gear text-xl mr-3"></i> Pengaturan Akun
       </button>
 
-      <button onclick="openMqttModal()" class="w-full flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 text-left transition-colors">
+      <button onclick="openMqttModal()" class="w-full flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent text-left transition-colors">
         <i class="ph ph-gear text-xl mr-3"></i> Setting MQTT
       </button>
-      <button onclick="handleLogout()" class="w-full flex items-center px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 text-left transition-colors">
+      <button onclick="handleLogout()" class="w-full flex items-center px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 border border-transparent text-left transition-colors">
         <i class="ph ph-sign-out text-xl mr-3"></i> Keluar
       </button>
     </nav>
@@ -134,13 +144,12 @@
       </div>
       
       <div class="flex items-center space-x-3">
-        <!-- Status ESP32 -->
+        <!-- Status Indikator ESP32 -->
         <div class="flex items-center glass-panel px-4 py-2 rounded-full border border-white/10">
           <div id="statusDot" class="w-2.5 h-2.5 rounded-full status-dot offline mr-2.5"></div>
           <span id="statusText" class="text-xs md:text-sm font-medium text-red-400">Connecting...</span>
         </div>
 
-        <!-- Tombol Reconnect MQTT / ESP32 -->
         <button onclick="connectMQTT()" title="Hubungkan Ulang MQTT" class="p-2.5 glass-panel rounded-full border border-white/10 hover:border-cyan-400/50 text-gray-300 hover:text-cyan-400 transition-all active:scale-95">
           <i class="ph ph-arrows-clockwise text-base"></i>
         </button>
@@ -189,14 +198,14 @@
         <div id="devicesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
       </div>
 
-      <!-- Section Billing / Kalkulator Tagihan Listrik -->
+      <!-- Section Billing / Kalkulator Tagihan Listrik Real-time -->
       <div id="billingSection" class="glass-panel p-6 rounded-2xl space-y-6">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-4">
           <div>
             <h2 class="text-xl font-semibold text-white flex items-center">
-              <i class="ph ph-receipt text-cyan-400 text-2xl mr-2"></i> Kalkulator & Estimasi Tagihan Listrik PLN
+              <i class="ph ph-receipt text-cyan-400 text-2xl mr-2"></i> Kalkulator & Tagihan Listrik Real-Time
             </h2>
-            <p class="text-xs text-gray-400">Hitung perkiraan konsumsi energi (kWh) dan estimasi biaya bulanan berdasarkan perangkat terdaftar.</p>
+            <p class="text-xs text-gray-400">Durasi penggunaan dihitung secara otomatis berdasarkan saat tombol dinyalakan dari dashboard.</p>
           </div>
           
           <div class="flex items-center space-x-3 no-print">
@@ -206,6 +215,9 @@
               <option value="1444.7" selected>R-1/1300 VA & 2200 VA - Rp 1.444,70 / kWh</option>
               <option value="1699.53">R-2/3500 VA - 5500 VA - Rp 1.699,53 / kWh</option>
             </select>
+            <button onclick="resetAllDeviceDurations()" class="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-xl text-xs border border-red-500/30 transition-colors">
+              <i class="ph ph-arrow-counter-clockwise mr-1"></i> Reset Durasi
+            </button>
             <button onclick="window.print()" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs flex items-center border border-white/10 transition-colors">
               <i class="ph ph-printer text-base mr-1.5"></i> Cetak
             </button>
@@ -215,11 +227,11 @@
         <!-- Metric Highlight Tagihan -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="bg-gray-900/60 p-4 rounded-xl border border-white/5">
-            <p class="text-xs text-gray-400 mb-1">Total Estimasi kWh / Bulan</p>
-            <h4 class="text-xl font-bold text-cyan-400"><span id="totalMonthlyKwh">0.00</span> kWh</h4>
+            <p class="text-xs text-gray-400 mb-1">Total Konsumsi Real-Time</p>
+            <h4 class="text-xl font-bold text-cyan-400"><span id="totalMonthlyKwh">0.0000</span> kWh</h4>
           </div>
           <div class="bg-gray-900/60 p-4 rounded-xl border border-white/5">
-            <p class="text-xs text-gray-400 mb-1">Estimasi Tagihan Bulanan</p>
+            <p class="text-xs text-gray-400 mb-1">Total Estimasi Biaya Pemakaian</p>
             <h4 class="text-xl font-bold text-green-400" id="totalMonthlyCost">Rp 0</h4>
           </div>
           <div class="bg-gray-900/60 p-4 rounded-xl border border-white/5">
@@ -236,9 +248,9 @@
                 <th class="px-4 py-3">Perangkat</th>
                 <th class="px-4 py-3">Ruangan</th>
                 <th class="px-4 py-3">Daya (Watt)</th>
-                <th class="px-4 py-3">Penggunaan (Jam/Hari)</th>
-                <th class="px-4 py-3">Konsumsi (kWh/Bulan)</th>
-                <th class="px-4 py-3 text-right">Estimasi Biaya / Bulan</th>
+                <th class="px-4 py-3">Durasi Nyala (Real-Time)</th>
+                <th class="px-4 py-3">Konsumsi (kWh)</th>
+                <th class="px-4 py-3 text-right">Biaya Pemakaian</th>
               </tr>
             </thead>
             <tbody id="billingTableBody" class="divide-y divide-white/5">
@@ -278,7 +290,7 @@
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1">MQTT Topic</label>
-          <input type="text" id="formDeviceTopic" required placeholder="Contoh: ruangtamu//lampu" class="w-full bg-gray-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+          <input type="text" id="formDeviceTopic" required placeholder="Contoh: anang_test_iot/lampu1" class="w-full bg-gray-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1">Konsumsi Daya (Watt)</label>
@@ -385,27 +397,40 @@
 
     // Variable Global State
     let devices = [];
-    let deviceHours = {}; // menyimpan durasi jam/hari per perangkat
     let mqttClient = null;
     let espTimeoutTimer = null;
     let sensorChart = null;
 
-    let brokerUrl = localStorage.getItem('nexus_mqtt_broker') || CONFIG.defaultMqtt.brokerUrl;
-    let topicSensor = localStorage.getItem('nexus_mqtt_sensor') || CONFIG.defaultMqtt.topicSensor;
-    let topicStatus = localStorage.getItem('nexus_mqtt_status') || CONFIG.defaultMqtt.topicStatus;
-    let mqttUserVal = localStorage.getItem('nexus_mqtt_user') || CONFIG.defaultMqtt.user;
-    let mqttPassVal = localStorage.getItem('nexus_mqtt_pass') || CONFIG.defaultMqtt.pass;
+    let brokerUrl = localStorage.getItem('exwann_mqtt_broker') || CONFIG.defaultMqtt.brokerUrl;
+    let topicSensor = localStorage.getItem('exwann_mqtt_sensor') || CONFIG.defaultMqtt.topicSensor;
+    let topicStatus = localStorage.getItem('exwann_mqtt_status') || CONFIG.defaultMqtt.topicStatus;
+    let mqttUserVal = localStorage.getItem('exwann_mqtt_user') || CONFIG.defaultMqtt.user;
+    let mqttPassVal = localStorage.getItem('exwann_mqtt_pass') || CONFIG.defaultMqtt.pass;
+
+    // --- MANAJEMEN EFEK GLOW SIDEBAR NAVIGASI ---
+    function setActiveNav(element) {
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach(item => {
+        item.className = "nav-item flex items-center px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent transition-all duration-300";
+      });
+      element.className = "nav-item flex items-center px-4 py-3 rounded-xl bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 text-glow transition-all duration-300";
+      
+      // Auto close sidebar di versi HP saat diklik
+      if (window.innerWidth < 768) {
+        toggleMobileSidebar();
+      }
+    }
 
     // --- AUTENTIKASI ---
     function getAdminCreds() {
       return {
-        user: localStorage.getItem('nexus_admin_user') || CONFIG.defaultAdmin.user,
-        pass: localStorage.getItem('nexus_admin_pass') || CONFIG.defaultAdmin.pass
+        user: localStorage.getItem('exwann_admin_user') || CONFIG.defaultAdmin.user,
+        pass: localStorage.getItem('exwann_admin_pass') || CONFIG.defaultAdmin.pass
       };
     }
 
     function checkAuth() {
-      const isLoggedIn = sessionStorage.getItem('nexus_is_logged_in');
+      const isLoggedIn = sessionStorage.getItem('exwann_is_logged_in');
       const loginScreen = document.getElementById('loginScreen');
       const creds = getAdminCreds();
 
@@ -418,6 +443,10 @@
         initChart();
         updateClock();
         setInterval(updateClock, 1000);
+
+        // Timer Real-Time untuk memperbarui durasi dan tabel billing setiap 1 detik
+        setInterval(renderBillingTable, 1000);
+
       } else {
         loginScreen.classList.remove('hidden');
       }
@@ -431,7 +460,7 @@
       const errorEl = document.getElementById('loginError');
 
       if (inputUser === creds.user && inputPass === creds.pass) {
-        sessionStorage.setItem('nexus_is_logged_in', 'true');
+        sessionStorage.setItem('exwann_is_logged_in', 'true');
         errorEl.classList.add('hidden');
         checkAuth();
       } else {
@@ -440,7 +469,7 @@
     }
 
     function handleLogout() {
-      sessionStorage.removeItem('nexus_is_logged_in');
+      sessionStorage.removeItem('exwann_is_logged_in');
       location.reload();
     }
 
@@ -461,8 +490,8 @@
       const newP = document.getElementById('accPass').value.trim();
 
       if (newU && newP) {
-        localStorage.setItem('nexus_admin_user', newU);
-        localStorage.setItem('nexus_admin_pass', newP);
+        localStorage.setItem('exwann_admin_user', newU);
+        localStorage.setItem('exwann_admin_pass', newP);
         alert('Username dan Password dashboard berhasil diubah!');
         closeAccountModal();
         checkAuth();
@@ -519,7 +548,7 @@
 
       const options = {
         connectTimeout: 5000,
-        clientId: 'nexus_web_' + Math.random().toString(16).substr(2, 8)
+        clientId: 'exwann_web_' + Math.random().toString(16).substr(2, 8)
       };
 
       if (mqttUserVal) options.username = mqttUserVal;
@@ -565,19 +594,22 @@
             return;
           }
 
-          // 3. Feedback Saklar/Device (TIDAK memicu triggerEspHeartbeat agar tidak bentrok)
+          // 3. Feedback Saklar/Device (Atur timer durasi nyala)
           const dev = devices.find(d => d.topic === topic);
           if (dev) {
-            if (msgStr === 'ON') dev.status = true;
-            else if (msgStr === 'OFF') dev.status = false;
+            let isTargetOn = false;
+            if (msgStr === 'ON') isTargetOn = true;
+            else if (msgStr === 'OFF') isTargetOn = false;
             else {
               try {
                 const data = JSON.parse(msgStr);
-                if (data.status !== undefined) dev.status = (data.status === 'ON' || data.status === true);
+                if (data.status !== undefined) isTargetOn = (data.status === 'ON' || data.status === true);
                 if (data.speed !== undefined) dev.speed = data.speed;
                 if (data.temp !== undefined) dev.temp = data.temp;
               } catch(e){}
             }
+
+            setDeviceStatusState(dev, isTargetOn);
             saveDevices();
             renderDevices();
           }
@@ -630,7 +662,9 @@
             status: item.status === true || item.status === 'ON',
             speed: item.speed || 1,
             temp: item.temp || 24,
-            icon: item.icon || getDeviceDefaultIcon(item.type)
+            icon: item.icon || getDeviceDefaultIcon(item.type),
+            totalActiveSeconds: Number(item.totalActiveSeconds) || 0,
+            lastTurnedOn: item.lastTurnedOn || null
           }));
         } else if (typeof data === 'object') {
           devices = Object.keys(data).map(key => {
@@ -645,7 +679,9 @@
               status: item.status === true || item.status === 'ON',
               speed: item.speed || 1,
               temp: item.temp || 24,
-              icon: item.icon || getDeviceDefaultIcon(item.type)
+              icon: item.icon || getDeviceDefaultIcon(item.type),
+              totalActiveSeconds: Number(item.totalActiveSeconds) || 0,
+              lastTurnedOn: item.lastTurnedOn || null
             };
           });
         }
@@ -764,10 +800,28 @@
       });
     }
 
+    // Mengubah Status Saklar & Mengukur Waktu Terpakai
+    function setDeviceStatusState(dev, targetStatus) {
+      if (dev.status === targetStatus) return;
+
+      if (targetStatus) {
+        dev.status = true;
+        dev.lastTurnedOn = Date.now();
+      } else {
+        if (dev.lastTurnedOn) {
+          const elapsedSecs = Math.floor((Date.now() - dev.lastTurnedOn) / 1000);
+          dev.totalActiveSeconds = (dev.totalActiveSeconds || 0) + elapsedSecs;
+        }
+        dev.status = false;
+        dev.lastTurnedOn = null;
+      }
+    }
+
     function toggleDevice(id) {
       const dev = devices.find(d => d.id === id);
       if (dev) {
-        dev.status = !dev.status;
+        const nextStatus = !dev.status;
+        setDeviceStatusState(dev, nextStatus);
         saveDevices();
         renderDevices();
         publishDeviceState(dev);
@@ -795,71 +849,99 @@
       }
     }
 
-    // --- FITUR TABEL & KALKULATOR TAGIHAN LISTRIK (BILLING SYSTEM) ---
+    // --- HITUNG LOGIKA WAKTU REAL-TIME PADA TAGIHAN ---
+    function getDeviceTotalActiveSeconds(dev) {
+      let secs = dev.totalActiveSeconds || 0;
+      if (dev.status && dev.lastTurnedOn) {
+        secs += Math.floor((Date.now() - dev.lastTurnedOn) / 1000);
+      }
+      return secs;
+    }
+
+    function formatDurationString(totalSeconds) {
+      const hours = Math.floor(totalSeconds / 3600);
+      const mins = Math.floor((totalSeconds % 3600) / 60);
+      const secs = totalSeconds % 60;
+
+      return `${String(hours).padStart(2, '0')}j ${String(mins).padStart(2, '0')}m ${String(secs).padStart(2, '0')}s`;
+    }
+
+    // --- FITUR TABEL & KALKULATOR TAGIHAN LISTRIK REAL-TIME ---
     function renderBillingTable() {
       const tableBody = document.getElementById('billingTableBody');
       const tariffRate = parseFloat(document.getElementById('plnTariffSelect').value) || 1444.7;
       
+      if (!tableBody) return;
       tableBody.innerHTML = '';
 
       if (devices.length === 0) {
         tableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-6 text-center text-gray-500">Belum ada perangkat terdaftar untuk dihitung.</td></tr>`;
-        document.getElementById('totalMonthlyKwh').innerText = '0.00';
+        document.getElementById('totalMonthlyKwh').innerText = '0.0000';
         document.getElementById('totalMonthlyCost').innerText = 'Rp 0';
         document.getElementById('topConsumingDevice').innerText = '-';
         return;
       }
 
-      let totalMonthlyKwh = 0;
+      let totalOverallKwh = 0;
       let topDeviceName = '-';
       let topDeviceKwh = 0;
 
       devices.forEach(dev => {
-        // Default durasi penggunaan: 8 jam per hari jika belum diatur
-        if (!deviceHours[dev.id]) deviceHours[dev.id] = 8;
+        const activeSecs = getDeviceTotalActiveSeconds(dev);
+        const activeHours = activeSecs / 3600;
         
-        const hours = deviceHours[dev.id];
-        const dailyKwh = (dev.wattage * hours) / 1000;
-        const monthlyKwh = dailyKwh * 30; // 30 Hari
-        const monthlyCost = monthlyKwh * tariffRate;
+        const realKwh = (dev.wattage * activeHours) / 1000;
+        const totalCost = realKwh * tariffRate;
 
-        totalMonthlyKwh += monthlyKwh;
+        totalOverallKwh += realKwh;
 
-        if (monthlyKwh > topDeviceKwh) {
-          topDeviceKwh = monthlyKwh;
+        if (realKwh > topDeviceKwh) {
+          topDeviceKwh = realKwh;
           topDeviceName = `${dev.name} (${dev.wattage}W)`;
         }
+
+        const isRunning = dev.status;
+        const statusBadge = isRunning 
+          ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-green-500/10 text-green-400 border border-green-500/20"><span class="w-1.5 h-1.5 rounded-full bg-green-400 mr-1 animate-pulse"></span> NYALA</span>`
+          : `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-gray-500/10 text-gray-400 border border-gray-500/20">MATI</span>`;
 
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-white/5 transition-colors';
         tr.innerHTML = `
-          <td class="px-4 py-3 font-medium text-white flex items-center">
-            <i class="ph ${dev.icon} text-cyan-400 text-lg mr-2"></i> ${dev.name}
+          <td class="px-4 py-3 font-medium text-white flex items-center justify-between">
+            <span class="flex items-center"><i class="ph ${dev.icon} text-cyan-400 text-lg mr-2"></i> ${dev.name}</span>
+            ${statusBadge}
           </td>
           <td class="px-4 py-3 text-gray-400">${dev.room}</td>
           <td class="px-4 py-3 text-cyan-400 font-mono">${dev.wattage} W</td>
-          <td class="px-4 py-3">
-            <div class="flex items-center space-x-2">
-              <input type="number" min="1" max="24" value="${hours}" onchange="updateDeviceHours('${dev.id}', this.value)" class="w-14 bg-gray-900 border border-white/10 rounded px-2 py-1 text-center text-white text-xs focus:outline-none focus:border-cyan-400">
-              <span class="text-gray-500">Jam/Hari</span>
-            </div>
+          <td class="px-4 py-3 font-mono text-amber-400 font-semibold">
+            ${formatDurationString(activeSecs)}
           </td>
-          <td class="px-4 py-3 font-mono text-white">${monthlyKwh.toFixed(2)} kWh</td>
-          <td class="px-4 py-3 text-right font-semibold text-green-400 font-mono">${formatRupiah(monthlyCost)}</td>
+          <td class="px-4 py-3 font-mono text-white">${realKwh.toFixed(4)} kWh</td>
+          <td class="px-4 py-3 text-right font-semibold text-green-400 font-mono">${formatRupiah(totalCost)}</td>
         `;
         tableBody.appendChild(tr);
       });
 
-      const totalCost = totalMonthlyKwh * tariffRate;
-      document.getElementById('totalMonthlyKwh').innerText = totalMonthlyKwh.toFixed(2);
-      document.getElementById('totalMonthlyCost').innerText = formatRupiah(totalCost);
+      const grandTotalCost = totalOverallKwh * tariffRate;
+      document.getElementById('totalMonthlyKwh').innerText = totalOverallKwh.toFixed(4);
+      document.getElementById('totalMonthlyCost').innerText = formatRupiah(grandTotalCost);
       document.getElementById('topConsumingDevice').innerText = topDeviceName;
     }
 
-    function updateDeviceHours(id, hours) {
-      const val = Math.max(1, Math.min(24, Number(hours) || 1));
-      deviceHours[id] = val;
-      renderBillingTable();
+    function resetAllDeviceDurations() {
+      if (confirm('Yakin ingin mereset riwayat durasi waktu & hitungan tagihan semua perangkat ke 0?')) {
+        devices.forEach(dev => {
+          dev.totalActiveSeconds = 0;
+          if (dev.status) {
+            dev.lastTurnedOn = Date.now();
+          } else {
+            dev.lastTurnedOn = null;
+          }
+        });
+        saveDevices();
+        renderBillingTable();
+      }
     }
 
     function formatRupiah(amount) {
@@ -917,116 +999,3 @@
           id: 'dev_' + Date.now(),
           name, type, room, topic, wattage,
           status: false,
-          speed: 1,
-          temp: 24,
-          icon: getDeviceDefaultIcon(type)
-        };
-        devices.push(newDev);
-      }
-
-      saveDevices();
-      closeDeviceModal();
-      subscribeAllTopics();
-      renderBillingTable();
-    }
-
-    function deleteDevice(id) {
-      if (confirm('Yakin ingin menghapus perangkat ini?')) {
-        devices = devices.filter(d => d.id !== id);
-        saveDevices();
-        renderBillingTable();
-      }
-    }
-
-    function openMqttModal() {
-      document.getElementById('mqttBrokerUrl').value = brokerUrl;
-      document.getElementById('mqttUsername').value = mqttUserVal;
-      document.getElementById('mqttPassword').value = mqttPassVal;
-      document.getElementById('mqttTopicSensor').value = topicSensor;
-      document.getElementById('mqttTopicStatus').value = topicStatus;
-      document.getElementById('mqttModal').classList.remove('hidden');
-    }
-
-    function closeMqttModal() {
-      document.getElementById('mqttModal').classList.add('hidden');
-    }
-
-    function handleMqttFormSubmit(e) {
-      e.preventDefault();
-      brokerUrl = document.getElementById('mqttBrokerUrl').value.trim();
-      mqttUserVal = document.getElementById('mqttUsername').value.trim();
-      mqttPassVal = document.getElementById('mqttPassword').value.trim();
-      topicSensor = document.getElementById('mqttTopicSensor').value.trim();
-      topicStatus = document.getElementById('mqttTopicStatus').value.trim();
-
-      localStorage.setItem('nexus_mqtt_broker', brokerUrl);
-      localStorage.setItem('nexus_mqtt_user', mqttUserVal);
-      localStorage.setItem('nexus_mqtt_pass', mqttPassVal);
-      localStorage.setItem('nexus_mqtt_sensor', topicSensor);
-      localStorage.setItem('nexus_mqtt_status', topicStatus);
-
-      closeMqttModal();
-      connectMQTT();
-    }
-
-    // --- CHART TELEMETRI SENSOR ---
-    function initChart() {
-      const ctx = document.getElementById('sensorChart').getContext('2d');
-      sensorChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: [],
-          datasets: [
-            {
-              label: 'Suhu (°C)',
-              borderColor: '#f59e0b',
-              backgroundColor: 'rgba(245, 158, 11, 0.1)',
-              data: [],
-              fill: true,
-              tension: 0.4
-            },
-            {
-              label: 'Kelembaban (%)',
-              borderColor: '#10b981',
-              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-              data: [],
-              fill: true,
-              tension: 0.4
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#9ca3af' } } },
-          scales: {
-            x: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-            y: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.05)' } }
-          }
-        }
-      });
-    }
-
-    function pushChartData(temp, hum) {
-      if (!sensorChart) return;
-      const nowStr = new Date().toLocaleTimeString('id-ID');
-
-      if (sensorChart.data.labels.length >= 10) {
-        sensorChart.data.labels.shift();
-        sensorChart.data.datasets[0].data.shift();
-        sensorChart.data.datasets[1].data.shift();
-      }
-
-      sensorChart.data.labels.push(nowStr);
-      sensorChart.data.datasets[0].data.push(temp);
-      sensorChart.data.datasets[1].data.push(hum);
-      sensorChart.update();
-    }
-
-    // JALANKAN APLIKASI
-    document.addEventListener('DOMContentLoaded', checkAuth);
-  </script>
-</body>
-</html>
-
-

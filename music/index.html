@@ -62,6 +62,7 @@
       margin-bottom: 20px;
     }
 
+    /* Search Box */
     .search-box {
       width: 100%;
       display: flex;
@@ -105,6 +106,7 @@
 
     .search-box button:active { transform: scale(0.9); }
 
+    /* Hasil Pencarian */
     .search-results {
       width: 100%;
       max-height: 200px;
@@ -159,6 +161,7 @@
       margin-top: 2px;
     }
 
+    /* Player Interface */
     .cover-art-container {
       position: relative;
       width: 180px;
@@ -287,11 +290,13 @@
   <div class="player-card">
     <div class="app-brand">exWann Music</div>
 
+    <!-- Search Box -->
     <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Cari judul lagu di YouTube..." onkeypress="handleSearchKey(event)">
-      <button onclick="searchYoutubeFull()"><i class="ph-bold ph-magnifying-glass"></i></button>
+      <input type="text" id="searchInput" placeholder="Cari lagu di YouTube..." onkeypress="handleSearchKey(event)">
+      <button onclick="searchYoutubeOfficial()"><i class="ph-bold ph-magnifying-glass"></i></button>
     </div>
 
+    <!-- Hasil Pencarian -->
     <div id="searchResults" class="search-results"></div>
 
     <div class="cover-art-container">
@@ -324,9 +329,11 @@
 
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
+    const YOUTUBE_API_KEY = "AIzaSyCanEd72Bvg08pX4wqZLdtvO3rxpVGbOYU";
+
     let playlist = [
       {
-        title: "Membasuh (Lirik)",
+        title: "Membasuh",
         artist: "Hindia",
         ytId: "u_qN2C50K6E",
         cover: "https://img.youtube.com/vi/u_qN2C50K6E/hqdefault.jpg"
@@ -369,11 +376,11 @@
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    async function searchYoutubeFull() {
-      const rawQuery = document.getElementById('searchInput').value.trim();
-      if (!rawQuery) return;
+    async function searchYoutubeOfficial() {
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) return;
 
-      const directId = extractYTId(rawQuery);
+      const directId = extractYTId(query);
       if (directId) {
         searchResults.style.display = 'none';
         document.getElementById('searchInput').value = '';
@@ -382,65 +389,41 @@
       }
 
       searchResults.style.display = 'flex';
-      searchResults.innerHTML = '<div style="font-size:12px; color:var(--primary-cyan); text-align:center; padding:10px;">Mencari versi full audio...</div>';
-
-      // Otomatis nambah kata "lirik" agar mendapatkan video non-official yang bisa di-embed full
-      const searchQuery = rawQuery.toLowerCase().includes('lirik') || rawQuery.toLowerCase().includes('audio') ? rawQuery : `${rawQuery} lirik`;
+      searchResults.innerHTML = '<div style="font-size:12px; color:var(--primary-cyan); text-align:center; padding:10px;">Mencari via YouTube API...</div>';
 
       try {
-        const ytSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(ytSearchUrl)}`;
-
-        const res = await fetch(proxyUrl);
+        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=5&key=${YOUTUBE_API_KEY}`;
+        const res = await fetch(url);
         const data = await res.json();
-        const html = data.contents;
 
-        let songs = [];
-        const match = html.match(/ytInitialData\s*=\s*({.+?});<\/script>/);
-
-        if (match) {
-          const ytData = JSON.parse(match[1]);
-          const contents = ytData.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents;
-
-          if (contents) {
-            for (const sec of contents) {
-              const list = sec.itemSectionRenderer?.contents;
-              if (list) {
-                for (const item of list) {
-                  if (item.videoRenderer) {
-                    const v = item.videoRenderer;
-                    const vId = v.videoId;
-                    const vTitle = v.title?.runs[0]?.text || "Judul Lagu";
-                    const vArtist = v.ownerText?.runs[0]?.text || "YouTube";
-                    const vThumb = `https://img.youtube.com/vi/${vId}/hqdefault.jpg`;
-
-                    if (vId) {
-                      songs.push({ id: vId, title: vTitle, artist: vArtist, thumb: vThumb });
-                    }
-                  }
-                }
-              }
-            }
-          }
+        if (data.error) {
+          console.error(data.error);
+          searchResults.innerHTML = `<div style="font-size:12px; color:#ef4444; text-align:center; padding:10px;">API Error: ${data.error.message}</div>`;
+          return;
         }
 
-        if (songs.length === 0) {
+        if (!data.items || data.items.length === 0) {
           searchResults.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">Lagu tidak ditemukan</div>';
           return;
         }
 
         searchResults.innerHTML = '';
-        songs.slice(0, 5).forEach(item => {
+        data.items.forEach(item => {
+          const vId = item.id.videoId;
+          const vTitle = item.snippet.title;
+          const vArtist = item.snippet.channelTitle;
+          const vThumb = item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || `https://img.youtube.com/vi/${vId}/hqdefault.jpg`;
+
           const div = document.createElement('div');
           div.className = 'result-item';
           div.innerHTML = `
-            <img class="result-thumb" src="${item.thumb}" alt="thumb">
+            <img class="result-thumb" src="${vThumb}" alt="thumb">
             <div class="result-details">
-              <div class="result-title">${item.title}</div>
-              <div class="result-artist">${item.artist}</div>
+              <div class="result-title">${vTitle}</div>
+              <div class="result-artist">${vArtist}</div>
             </div>
           `;
-          div.onclick = () => selectAndPlaySong(item.title, item.artist, item.id, item.thumb);
+          div.onclick = () => selectAndPlaySong(vTitle, vArtist, vId, vThumb);
           searchResults.appendChild(div);
         });
 
@@ -451,7 +434,7 @@
     }
 
     function handleSearchKey(e) {
-      if (e.key === 'Enter') searchYoutubeFull();
+      if (e.key === 'Enter') searchYoutubeOfficial();
     }
 
     function selectAndPlaySong(title, artist, ytId, cover) {
@@ -511,9 +494,8 @@
       }
     }
 
-    // Auto-Skip jika video kena proteksi hak cipta / embed disabled
     function onPlayerError(e) {
-      console.warn("Video diblokir YouTube (Error: " + e.data + "), otomatis lanjut lagu berikutnya...");
+      console.warn("Video diblokir YouTube (Error: " + e.data + "), memutar lagu berikutnya...");
       nextTrack();
     }
 

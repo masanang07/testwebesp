@@ -89,7 +89,6 @@
   <div id="ytPlayerHidden"></div>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     'use strict';
 
@@ -102,6 +101,8 @@
       databaseURL: 'https://testwebesp-default-rtdb.firebaseio.com'
     };
 
+    // Tidak memakai lagu starter agar player tidak bergantung pada ID video bawaan.
+    const STARTER_TRACKS = [];
     const MAX_QUEUE = 100;
     const MAX_HISTORY = 100;
     const $ = id => document.getElementById(id);
@@ -231,7 +232,7 @@
 
     window.onYouTubeIframeAPIReady = function () {
       ytPlayer = new YT.Player('ytPlayerHidden', {
-        width:'200', height:'200', videoId:STARTER_TRACKS[0].ytId,
+        width:'200', height:'200',
         playerVars:{playsinline:1,controls:0,rel:0,enablejsapi:1},
         events:{
           onReady:() => {
@@ -245,6 +246,15 @@
         }
       });
     };
+
+    // Callback sudah didefinisikan sebelum YouTube IFrame API dimuat.
+    const ytApiScript = document.createElement('script');
+    ytApiScript.src = 'https://www.youtube.com/iframe_api';
+    ytApiScript.onerror = () => {
+      $('playerStatus').textContent = 'YouTube gagal dimuat';
+      showToast('API player YouTube gagal dimuat. Cek koneksi atau pemblokir konten.');
+    };
+    document.head.appendChild(ytApiScript);
 
     async function searchYoutubeOfficial() {
       const query = $('searchInput').value.trim();
@@ -430,6 +440,13 @@
       recommendationInProgress = true;
       try {
         const seed = currentTrack || history[0] || STARTER_TRACKS[0];
+        if (!seed) {
+          recommendationGrid.replaceChildren();
+          const p = document.createElement('p'); p.className = 'empty-state';
+          p.textContent = 'Putar lagu terlebih dahulu untuk membangun rekomendasi.';
+          recommendationGrid.appendChild(p);
+          return [];
+        }
         const query = `${seed.artist} lagu resmi`;
         const params = new URLSearchParams({part:'snippet',q:query,type:'video',videoEmbeddable:'true',maxResults:'10',key:YOUTUBE_API_KEY});
         const response = await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`);
@@ -501,7 +518,8 @@
       if (state === YT.PlayerState.PLAYING) ytPlayer.pauseVideo();
       else if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.CUED) ytPlayer.playVideo();
       else if (currentTrack) ytPlayer.playVideo();
-      else playTrackNow(STARTER_TRACKS[0]);
+      else if (STARTER_TRACKS[0]) playTrackNow(STARTER_TRACKS[0]);
+      else showToast('Cari lagu YouTube terlebih dahulu.');
     }
     function nextTrack() { if (queue.length) { const track=queue.shift();renderQueue();persistQueue();playTrackNow(track); } else advanceTrack(); }
     function prevTrack() {

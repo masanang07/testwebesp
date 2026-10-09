@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>exWann Music Player</title>
+  
+  <!-- PWA & Theme -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#070a12">
+
+  <!-- Google Fonts & Phosphor Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <style>
+    :root {
+      --bg-dark: #070a12;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --primary-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --text-muted: #94a3b8;
+      --text-main: #f8fafc;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 20% 20%, rgba(6, 182, 212, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+      color: var(--text-main);
+      font-family: 'Space Grotesk', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .player-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      border-radius: 32px;
+      padding: 32px 28px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .app-brand {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--primary-cyan);
+      margin-bottom: 20px;
+    }
+
+    .cover-art-container {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      margin-bottom: 24px;
+    }
+
+    .cover-art {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      animation: spin 20s linear infinite;
+      animation-play-state: paused;
+    }
+
+    .cover-art.playing {
+      animation-play-state: running;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .track-info {
+      text-align: center;
+      margin-bottom: 24px;
+      width: 100%;
+    }
+
+    .track-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .track-artist {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      width: 100%;
+      margin-bottom: 24px;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 100px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary-cyan), var(--accent-green));
+      border-radius: 100px;
+      transition: width 0.1s linear;
+    }
+
+    .time-stamps {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      width: 100%;
+    }
+
+    .btn-ctrl {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 24px;
+      cursor: pointer;
+      transition: transform 0.2s ease, color 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-ctrl:active { transform: scale(0.9); }
+    .btn-ctrl:hover { color: var(--primary-cyan); }
+
+    .btn-play {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-cyan), var(--accent-green));
+      color: #000;
+      font-size: 28px;
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+    }
+
+    .btn-play:hover {
+      color: #000;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="player-card">
+    <div class="app-brand">exWann Music</div>
+
+    <div class="cover-art-container">
+      <img id="coverArt" class="cover-art" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&q=80" alt="Album Cover">
+    </div>
+
+    <div class="track-info">
+      <div id="trackTitle" class="track-title">Memuat Lagu...</div>
+      <div id="trackArtist" class="track-artist">--</div>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress-bar-bg" id="progressBar" onclick="seekTrack(event)">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="time-stamps">
+        <span id="currentTime">0:00</span>
+        <span id="duration">0:00</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn-ctrl" onclick="prevTrack()"><i class="ph-bold ph-skip-back"></i></button>
+      <button id="playBtn" class="btn-ctrl btn-play" onclick="togglePlay()"><i class="ph-bold ph-play"></i></button>
+      <button class="btn-ctrl" onclick="nextTrack()"><i class="ph-bold ph-skip-forward"></i></button>
+    </div>
+  </div>
+
+  <audio id="audioPlayer"></audio>
+
+  <script>
+    // DAFTAR LAGU
+    const playlist = [
+      {
+        title: "Sample Audio 1",
+        artist: "Demo Artist",
+        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+        cover: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&q=80"
+      },
+      {
+        title: "Sample Audio 2",
+        artist: "Demo Artist",
+        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+        cover: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&q=80"
+      }
+    ];
+
+    let currentTrackIndex = 0;
+    let isPlaying = false;
+
+    const audio = document.getElementById('audioPlayer');
+    const coverArt = document.getElementById('coverArt');
+    const trackTitle = document.getElementById('trackTitle');
+    const trackArtist = document.getElementById('trackArtist');
+    const playBtn = document.getElementById('playBtn');
+    const progressFill = document.getElementById('progressFill');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationEl = document.getElementById('duration');
+
+    function loadTrack(index) {
+      const track = playlist[index];
+      audio.src = track.src;
+      trackTitle.innerText = track.title;
+      trackArtist.innerText = track.artist;
+      coverArt.src = track.cover;
+      
+      updateMediaSession(track);
+    }
+
+    function togglePlay() {
+      if (isPlaying) {
+        audio.pause();
+      } else {
+        audio.play();
+      }
+    }
+
+    audio.onplay = () => {
+      isPlaying = true;
+      playBtn.innerHTML = '<i class="ph-bold ph-pause"></i>';
+      coverArt.classList.add('playing');
+    };
+
+    audio.onpause = () => {
+      isPlaying = false;
+      playBtn.innerHTML = '<i class="ph-bold ph-play"></i>';
+      coverArt.classList.remove('playing');
+    };
+
+    function prevTrack() {
+      currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+      loadTrack(currentTrackIndex);
+      audio.play();
+    }
+
+    function nextTrack() {
+      currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+      loadTrack(currentTrackIndex);
+      audio.play();
+    }
+
+    audio.ontimeupdate = () => {
+      if (audio.duration) {
+        const pct = (audio.currentTime / audio.duration) * 100;
+        progressFill.style.width = pct + '%';
+        currentTimeEl.innerText = formatTime(audio.currentTime);
+        durationEl.innerText = formatTime(audio.duration);
+      }
+    };
+
+    audio.onended = () => { nextTrack(); };
+
+    function seekTrack(e) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      audio.currentTime = (clickX / rect.width) * audio.duration;
+    }
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    // Media Session API (Untuk Notifikasi & Lock Screen HP)
+    function updateMediaSession(track) {
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: track.title,
+          artist: track.artist,
+          album: 'exWann Music',
+          artwork: [{ src: track.cover, sizes: '512x512', type: 'image/jpeg' }]
+        });
+
+        navigator.mediaSession.setActionHandler('play', () => audio.play());
+        navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+        navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
+        navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
+      }
+    }
+
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW Error:', err));
+    }
+
+    loadTrack(currentTrackIndex);
+  </script>
+</body>
+</html>

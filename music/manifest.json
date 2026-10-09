@@ -1,0 +1,26 @@
+{
+  "id": "/music/",
+  "name": "exWann Music",
+  "short_name": "exWann Music",
+  "description": "Pemutar musik exWann Music",
+  "start_url": "/music/",
+  "scope": "/music/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#070a11",
+  "theme_color": "#070a11",
+  "icons": [
+    {
+      "src": "/music/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/music/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

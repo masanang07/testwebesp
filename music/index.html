@@ -62,7 +62,6 @@
       margin-bottom: 20px;
     }
 
-    /* Search Box */
     .search-box {
       width: 100%;
       display: flex;
@@ -106,7 +105,6 @@
 
     .search-box button:active { transform: scale(0.9); }
 
-    /* Hasil Pencarian */
     .search-results {
       width: 100%;
       max-height: 200px;
@@ -161,7 +159,6 @@
       margin-top: 2px;
     }
 
-    /* Player Interface */
     .cover-art-container {
       position: relative;
       width: 180px;
@@ -290,13 +287,11 @@
   <div class="player-card">
     <div class="app-brand">exWann Music</div>
 
-    <!-- Search Box -->
     <div class="search-box">
       <input type="text" id="searchInput" placeholder="Cari judul lagu di YouTube..." onkeypress="handleSearchKey(event)">
-      <button onclick="searchYoutubeDirect()"><i class="ph-bold ph-magnifying-glass"></i></button>
+      <button onclick="searchYoutubeFull()"><i class="ph-bold ph-magnifying-glass"></i></button>
     </div>
 
-    <!-- Hasil Pencarian YT Direct -->
     <div id="searchResults" class="search-results"></div>
 
     <div class="cover-art-container">
@@ -331,7 +326,7 @@
   <script>
     let playlist = [
       {
-        title: "Membasuh",
+        title: "Membasuh (Lirik)",
         artist: "Hindia",
         ytId: "u_qN2C50K6E",
         cover: "https://img.youtube.com/vi/u_qN2C50K6E/hqdefault.jpg"
@@ -360,7 +355,8 @@
         playerVars: { 'playsinline': 1, 'controls': 0 },
         events: {
           'onReady': () => loadTrack(0, false),
-          'onStateChange': onPlayerStateChange
+          'onStateChange': onPlayerStateChange,
+          'onError': onPlayerError
         }
       });
     }
@@ -373,13 +369,11 @@
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    // Engine Pencarian Langsung dari Situs YouTube
-    async function searchYoutubeDirect() {
-      const query = document.getElementById('searchInput').value.trim();
-      if (!query) return;
+    async function searchYoutubeFull() {
+      const rawQuery = document.getElementById('searchInput').value.trim();
+      if (!rawQuery) return;
 
-      // Cek jika input berupa link direct YT
-      const directId = extractYTId(query);
+      const directId = extractYTId(rawQuery);
       if (directId) {
         searchResults.style.display = 'none';
         document.getElementById('searchInput').value = '';
@@ -388,10 +382,13 @@
       }
 
       searchResults.style.display = 'flex';
-      searchResults.innerHTML = '<div style="font-size:12px; color:var(--primary-cyan); text-align:center; padding:10px;">Mencari di YouTube...</div>';
+      searchResults.innerHTML = '<div style="font-size:12px; color:var(--primary-cyan); text-align:center; padding:10px;">Mencari versi full audio...</div>';
+
+      // Otomatis nambah kata "lirik" agar mendapatkan video non-official yang bisa di-embed full
+      const searchQuery = rawQuery.toLowerCase().includes('lirik') || rawQuery.toLowerCase().includes('audio') ? rawQuery : `${rawQuery} lirik`;
 
       try {
-        const ytSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+        const ytSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
         const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(ytSearchUrl)}`;
 
         const res = await fetch(proxyUrl);
@@ -399,9 +396,8 @@
         const html = data.contents;
 
         let songs = [];
-
-        // Parse JSON ytInitialData bawaan YouTube
         const match = html.match(/ytInitialData\s*=\s*({.+?});<\/script>/);
+
         if (match) {
           const ytData = JSON.parse(match[1]);
           const contents = ytData.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents;
@@ -428,16 +424,165 @@
           }
         }
 
-        // Fallback Regex jika JSON Parse gagal
         if (songs.length === 0) {
-          const regex = /"videoId":"([a-zA-Z0-9_-]{11})"/g;
-          const ids = [];
-          let m;
-          while ((m = regex.exec(html)) !== null) {
-            if (!ids.includes(m[1])) ids.push(m[1]);
+          searchResults.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">Lagu tidak ditemukan</div>';
+          return;
+        }
+
+        searchResults.innerHTML = '';
+        songs.slice(0, 5).forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'result-item';
+          div.innerHTML = `
+            <img class="result-thumb" src="${item.thumb}" alt="thumb">
+            <div class="result-details">
+              <div class="result-title">${item.title}</div>
+              <div class="result-artist">${item.artist}</div>
+            </div>
+          `;
+          div.onclick = () => selectAndPlaySong(item.title, item.artist, item.id, item.thumb);
+          searchResults.appendChild(div);
+        });
+
+      } catch (err) {
+        console.error(err);
+        searchResults.innerHTML = '<div style="font-size:12px; color:#ef4444; text-align:center; padding:10px;">Gagal memuat. Coba lagi!</div>';
+      }
+    }
+
+    function handleSearchKey(e) {
+      if (e.key === 'Enter') searchYoutubeFull();
+    }
+
+    function selectAndPlaySong(title, artist, ytId, cover) {
+      const newTrack = { title, artist, ytId, cover };
+      playlist.unshift(newTrack);
+      currentTrackIndex = 0;
+      
+      searchResults.style.display = 'none';
+      document.getElementById('searchInput').value = '';
+
+      loadTrack(0, true);
+    }
+
+    function loadTrack(index, autoPlay = true) {
+      if (playlist.length === 0) return;
+      const track = playlist[index];
+      trackTitle.innerText = track.title;
+      trackArtist.innerText = track.artist;
+      coverArt.src = track.cover;
+
+      if (ytPlayer && ytPlayer.loadVideoById) {
+        if (autoPlay) {
+          ytPlayer.loadVideoById(track.ytId);
+        } else {
+          ytPlayer.cueVideoById(track.ytId);
+        }
+      }
+
+      updateMediaSession(track);
+    }
+
+    function togglePlay() {
+      if (!ytPlayer) return;
+      const state = ytPlayer.getPlayerState();
+      if (state === YT.PlayerState.PLAYING) {
+        ytPlayer.pauseVideo();
+      } else {
+        ytPlayer.playVideo();
+      }
+    }
+
+    function onPlayerStateChange(event) {
+      if (event.data === YT.PlayerState.PLAYING) {
+        isPlaying = true;
+        playBtn.innerHTML = '<i class="ph-bold ph-pause"></i>';
+        coverArt.classList.add('playing');
+        startProgressLoop();
+      } else {
+        isPlaying = false;
+        playBtn.innerHTML = '<i class="ph-bold ph-play"></i>';
+        coverArt.classList.remove('playing');
+        stopProgressLoop();
+      }
+
+      if (event.data === YT.PlayerState.ENDED) {
+        nextTrack();
+      }
+    }
+
+    // Auto-Skip jika video kena proteksi hak cipta / embed disabled
+    function onPlayerError(e) {
+      console.warn("Video diblokir YouTube (Error: " + e.data + "), otomatis lanjut lagu berikutnya...");
+      nextTrack();
+    }
+
+    function prevTrack() {
+      if (playlist.length === 0) return;
+      currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+      loadTrack(currentTrackIndex, true);
+    }
+
+    function nextTrack() {
+      if (playlist.length === 0) return;
+      currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+      loadTrack(currentTrackIndex, true);
+    }
+
+    function startProgressLoop() {
+      stopProgressLoop();
+      progressInterval = setInterval(() => {
+        if (ytPlayer && ytPlayer.getCurrentTime) {
+          const currentTime = ytPlayer.getCurrentTime() || 0;
+          const duration = ytPlayer.getDuration() || 0;
+
+          if (duration > 0) {
+            const pct = (currentTime / duration) * 100;
+            progressFill.style.width = pct + '%';
+            currentTimeEl.innerText = formatTime(currentTime);
+            durationEl.innerText = formatTime(duration);
           }
-          songs = ids.slice(0, 5).map(id => ({
-            id: id,
-            title: `Lagu YouTube (${id})`,
-            artist: "exWann Audio",
-            thumb: `
+        }
+      }, 500);
+    }
+
+    function stopProgressLoop() {
+      if (progressInterval) clearInterval(progressInterval);
+    }
+
+    function seekTrack(e) {
+      if (!ytPlayer || !ytPlayer.getDuration) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const duration = ytPlayer.getDuration();
+      ytPlayer.seekTo((clickX / rect.width) * duration, true);
+    }
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    function updateMediaSession(track) {
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: track.title,
+          artist: track.artist,
+          album: 'exWann Music',
+          artwork: [{ src: track.cover, sizes: '512x512', type: 'image/jpeg' }]
+        });
+
+        navigator.mediaSession.setActionHandler('play', () => ytPlayer.playVideo());
+        navigator.mediaSession.setActionHandler('pause', () => ytPlayer.pauseVideo());
+        navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
+        navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
+      }
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW Error:', err));
+    }
+  </script>
+</body>
+</html>

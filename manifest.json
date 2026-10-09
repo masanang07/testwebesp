@@ -1,0 +1,21 @@
+{
+  "name": "AURA IoT Command Center",
+  "short_name": "AURA IoT",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070a12",
+  "theme_color": "#070a12",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/658/658148.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/658/658148.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

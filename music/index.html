@@ -71,7 +71,7 @@
       border: 1px solid var(--border-color);
       border-radius: 16px;
       padding: 8px 12px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       transition: border-color 0.2s;
     }
 
@@ -117,8 +117,6 @@
       gap: 8px;
       padding-right: 4px;
     }
-
-    .search-results.active { display: flex; }
 
     .result-item {
       display: flex;
@@ -292,9 +290,9 @@
   <div class="player-card">
     <div class="app-brand">exWann Music</div>
 
-    <!-- Kolom Cari Lagu Direct YouTube -->
+    <!-- Kolom Cari Lagu / Paste Link YouTube -->
     <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Cari lagu di YouTube..." onkeypress="handleSearchKey(event)">
+      <input type="text" id="searchInput" placeholder="Cari judul lagu / paste link YT..." onkeypress="handleSearchKey(event)">
       <button onclick="searchMusic()"><i class="ph-bold ph-magnifying-glass"></i></button>
     </div>
 
@@ -367,45 +365,95 @@
       });
     }
 
-    // Fungsi Cari Lagu lewat API Public YouTube
+    // Sistem Search dengan Multi-Server Fallback
     async function searchMusic() {
       const query = document.getElementById('searchInput').value.trim();
       if (!query) return;
 
+      // Fitur Deteksi Paste Link Direct Youtube
+      if (query.includes('youtube.com/') || query.includes('youtu.be/')) {
+        let videoId = '';
+        if (query.includes('v=')) {
+          videoId = query.split('v=')[1].split('&')[0];
+        } else if (query.includes('youtu.be/')) {
+          videoId = query.split('youtu.be/')[1].split('?')[0];
+        }
+        if (videoId) {
+          selectAndPlaySong("Lagu YouTube", "exWann Music", videoId, `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`);
+          return;
+        }
+      }
+
       searchResults.style.display = 'flex';
       searchResults.innerHTML = '<div style="font-size:12px; color:var(--primary-cyan); text-align:center; padding:10px;">Mencari di YouTube...</div>';
 
-      try {
-        // Menggunakan API Public Proxy Invidious / Piped untuk Search YouTube tanpa API Key
-        const res = await fetch(`https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(query)}&filter=music_songs`);
-        const data = await res.json();
-
-        if (!data.items || data.items.length === 0) {
-          searchResults.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">Lagu tidak ditemukan</div>';
-          return;
+      // Daftar 3 Server Cadangan
+      const servers = [
+        {
+          url: q => `https://api.piped.video/search?q=${encodeURIComponent(q)}&filter=music_songs`,
+          parse: data => data.items.filter(i => i.type === 'stream').map(i => ({
+            title: i.title,
+            artist: i.uploaderName || 'YouTube Artist',
+            id: i.url.split('v=')[1],
+            thumb: i.thumbnail
+          }))
+        },
+        {
+          url: q => `https://yewtu.be/api/v1/search?q=${encodeURIComponent(q)}&type=video`,
+          parse: data => data.map(i => ({
+            title: i.title,
+            artist: i.author || 'YouTube Artist',
+            id: i.videoId,
+            thumb: `https://img.youtube.com/vi/${i.videoId}/hqdefault.jpg`
+          }))
+        },
+        {
+          url: q => `https://invidious.nerdvpn.de/api/v1/search?q=${encodeURIComponent(q)}&type=video`,
+          parse: data => data.map(i => ({
+            title: i.title,
+            artist: i.author || 'YouTube Artist',
+            id: i.videoId,
+            thumb: `https://img.youtube.com/vi/${i.videoId}/hqdefault.jpg`
+          }))
         }
+      ];
 
-        searchResults.innerHTML = '';
-        data.items.slice(0, 5).forEach(item => {
-          if (item.type !== 'stream') return;
-          
-          const videoId = item.url.split('v=')[1];
-          const div = document.createElement('div');
-          div.className = 'result-item';
-          div.innerHTML = `
-            <img class="result-thumb" src="${item.thumbnail}" alt="thumb">
-            <div class="result-details">
-              <div class="result-title">${item.title}</div>
-              <div class="result-artist">${item.uploaderName}</div>
-            </div>
-          `;
-          div.onclick = () => selectAndPlaySong(item.title, item.uploaderName, videoId, item.thumbnail);
-          searchResults.appendChild(div);
-        });
-      } catch (err) {
-        console.error(err);
-        searchResults.innerHTML = '<div style="font-size:12px; color:#ef4444; text-align:center; padding:10px;">Gagal memuat. Coba lagi!</div>';
+      let songs = null;
+
+      for (const server of servers) {
+        try {
+          const res = await fetch(server.url(query));
+          if (!res.ok) continue;
+          const data = await res.json();
+          const parsed = server.parse(data);
+          if (parsed && parsed.length > 0) {
+            songs = parsed;
+            break; // Jika berhasil dapat lagu, stop loop server
+          }
+        } catch (e) {
+          console.log('Server sibuk, mencoba server cadangan berikutnya...');
+        }
       }
+
+      if (!songs || songs.length === 0) {
+        searchResults.innerHTML = '<div style="font-size:12px; color:#ef4444; text-align:center; padding:10px;">Gagal memuat. Coba paste link YT-nya langsung!</div>';
+        return;
+      }
+
+      searchResults.innerHTML = '';
+      songs.slice(0, 5).forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'result-item';
+        div.innerHTML = `
+          <img class="result-thumb" src="${item.thumb}" alt="thumb" onerror="this.src='https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&q=80'">
+          <div class="result-details">
+            <div class="result-title">${item.title}</div>
+            <div class="result-artist">${item.artist}</div>
+          </div>
+        `;
+        div.onclick = () => selectAndPlaySong(item.title, item.artist, item.id, item.thumb);
+        searchResults.appendChild(div);
+      });
     }
 
     function handleSearchKey(e) {
@@ -414,10 +462,10 @@
 
     function selectAndPlaySong(title, artist, ytId, cover) {
       const newTrack = { title, artist, ytId, cover };
-      playlist.unshift(newTrack); // Tambahkan ke urutan pertama playlist
+      playlist.unshift(newTrack);
       currentTrackIndex = 0;
       
-      searchResults.style.display = 'none'; // Sembunyikan hasil cari
+      searchResults.style.display = 'none';
       document.getElementById('searchInput').value = '';
 
       loadTrack(0, true);

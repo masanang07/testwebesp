@@ -71,7 +71,7 @@
       border: 1px solid var(--border-color);
       border-radius: 16px;
       padding: 8px 12px;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
       transition: border-color 0.2s;
     }
 
@@ -84,7 +84,7 @@
       background: transparent;
       border: none;
       color: #fff;
-      font-size: 12px;
+      font-size: 13px;
       font-family: inherit;
       outline: none;
     }
@@ -106,17 +106,10 @@
 
     .search-box button:active { transform: scale(0.9); }
 
-    .hint-text {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-      text-align: center;
-    }
-
     /* Hasil Pencarian */
     .search-results {
       width: 100%;
-      max-height: 180px;
+      max-height: 200px;
       overflow-y: auto;
       margin-bottom: 16px;
       display: none;
@@ -143,8 +136,8 @@
     }
 
     .result-thumb {
-      width: 44px;
-      height: 44px;
+      width: 48px;
+      height: 48px;
       border-radius: 8px;
       object-fit: cover;
     }
@@ -297,14 +290,13 @@
   <div class="player-card">
     <div class="app-brand">exWann Music</div>
 
-    <!-- Kolom Smart Search / Paste Link -->
+    <!-- Search Box -->
     <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Paste link YouTube / cari lagu..." onkeypress="handleSearchKey(event)">
-      <button onclick="handleSmartSearch()"><i class="ph-bold ph-play-circle"></i></button>
+      <input type="text" id="searchInput" placeholder="Cari judul lagu di YouTube..." onkeypress="handleSearchKey(event)">
+      <button onclick="searchYoutubeDirect()"><i class="ph-bold ph-magnifying-glass"></i></button>
     </div>
-    <div class="hint-text">💡 Paste link YouTube dari HP, langsung muter!</div>
 
-    <!-- Hasil Pencarian iTunes -->
+    <!-- Hasil Pencarian YT Direct -->
     <div id="searchResults" class="search-results"></div>
 
     <div class="cover-art-container">
@@ -312,7 +304,7 @@
     </div>
 
     <div class="track-info">
-      <div id="trackTitle" class="track-title">Paste Link / Cari Lagu</div>
+      <div id="trackTitle" class="track-title">Cari lagu di atas ☝️</div>
       <div id="trackArtist" class="track-artist">exWann Audio</div>
     </div>
 
@@ -334,13 +326,11 @@
   </div>
 
   <div id="ytPlayerHidden"></div>
-  <audio id="audioPlayerFallback"></audio>
 
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     let playlist = [
       {
-        type: 'youtube',
         title: "Membasuh",
         artist: "Hindia",
         ytId: "u_qN2C50K6E",
@@ -352,7 +342,6 @@
     let ytPlayer = null;
     let isPlaying = false;
     let progressInterval = null;
-    let currentSourceType = 'youtube';
 
     const coverArt = document.getElementById('coverArt');
     const trackTitle = document.getElementById('trackTitle');
@@ -362,7 +351,6 @@
     const currentTimeEl = document.getElementById('currentTime');
     const durationEl = document.getElementById('duration');
     const searchResults = document.getElementById('searchResults');
-    const audioFallback = document.getElementById('audioPlayerFallback');
 
     function onYouTubeIframeAPIReady() {
       ytPlayer = new YT.Player('ytPlayerHidden', {
@@ -385,240 +373,71 @@
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    async function handleSmartSearch() {
+    // Engine Pencarian Langsung dari Situs YouTube
+    async function searchYoutubeDirect() {
       const query = document.getElementById('searchInput').value.trim();
       if (!query) return;
 
-      // 1. Cek Apakah Input Berupa Link YouTube
-      const ytId = extractYTId(query);
-      if (ytId) {
+      // Cek jika input berupa link direct YT
+      const directId = extractYTId(query);
+      if (directId) {
         searchResults.style.display = 'none';
         document.getElementById('searchInput').value = '';
-        
-        playYouTubeSong("Lagu YouTube", "exWann Music", ytId, `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`);
+        selectAndPlaySong("Lagu YouTube", "exWann Music", directId, `https://img.youtube.com/vi/${directId}/hqdefault.jpg`);
         return;
       }
 
-      // 2. Jika Hanya Teks Judul Lagu, Gunakan Official iTunes API (100% Cepat & Anti-Block)
       searchResults.style.display = 'flex';
-      searchResults.innerHTML = '<div style="font-size:12px; color:var(--primary-cyan); text-align:center; padding:10px;">Mencari di database musik...</div>';
+      searchResults.innerHTML = '<div style="font-size:12px; color:var(--primary-cyan); text-align:center; padding:10px;">Mencari di YouTube...</div>';
 
       try {
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=5`);
+        const ytSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(ytSearchUrl)}`;
+
+        const res = await fetch(proxyUrl);
         const data = await res.json();
+        const html = data.contents;
 
-        if (!data.results || data.results.length === 0) {
-          searchResults.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">Lagu tidak ditemukan. Coba paste link YouTube-nya langsung!</div>';
-          return;
-        }
+        let songs = [];
 
-        searchResults.innerHTML = '';
-        data.results.forEach(item => {
-          const highResCover = item.artworkUrl100.replace('100x100bb', '500x500bb');
-          const div = document.createElement('div');
-          div.className = 'result-item';
-          div.innerHTML = `
-            <img class="result-thumb" src="${item.artworkUrl100}" alt="thumb">
-            <div class="result-details">
-              <div class="result-title">${item.trackName}</div>
-              <div class="result-artist">${item.artistName}</div>
-            </div>
-          `;
-          div.onclick = () => {
-            searchResults.style.display = 'none';
-            document.getElementById('searchInput').value = '';
-            
-            const track = {
-              type: 'audio',
-              title: item.trackName,
-              artist: item.artistName,
-              src: item.previewUrl,
-              cover: highResCover
-            };
-            playlist.unshift(track);
-            currentTrackIndex = 0;
-            loadTrack(0, true);
-          };
-          searchResults.appendChild(div);
-        });
-      } catch (err) {
-        console.error(err);
-        searchResults.innerHTML = '<div style="font-size:12px; color:#ef4444; text-align:center; padding:10px;">Gagal memuat. Paste link YouTube-nya aja!</div>';
-      }
-    }
+        // Parse JSON ytInitialData bawaan YouTube
+        const match = html.match(/ytInitialData\s*=\s*({.+?});<\/script>/);
+        if (match) {
+          const ytData = JSON.parse(match[1]);
+          const contents = ytData.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents;
 
-    function handleSearchKey(e) {
-      if (e.key === 'Enter') handleSmartSearch();
-    }
+          if (contents) {
+            for (const sec of contents) {
+              const list = sec.itemSectionRenderer?.contents;
+              if (list) {
+                for (const item of list) {
+                  if (item.videoRenderer) {
+                    const v = item.videoRenderer;
+                    const vId = v.videoId;
+                    const vTitle = v.title?.runs[0]?.text || "Judul Lagu";
+                    const vArtist = v.ownerText?.runs[0]?.text || "YouTube";
+                    const vThumb = `https://img.youtube.com/vi/${vId}/hqdefault.jpg`;
 
-    function playYouTubeSong(title, artist, ytId, cover) {
-      const track = { type: 'youtube', title, artist, ytId, cover };
-      playlist.unshift(track);
-      currentTrackIndex = 0;
-      loadTrack(0, true);
-    }
-
-    function loadTrack(index, autoPlay = true) {
-      if (playlist.length === 0) return;
-      const track = playlist[index];
-      currentSourceType = track.type;
-
-      trackTitle.innerText = track.title;
-      trackArtist.innerText = track.artist;
-      coverArt.src = track.cover;
-
-      if (track.type === 'youtube') {
-        if (audioFallback) audioFallback.pause();
-        if (ytPlayer && ytPlayer.loadVideoById) {
-          if (autoPlay) {
-            ytPlayer.loadVideoById(track.ytId);
-          } else {
-            ytPlayer.cueVideoById(track.ytId);
+                    if (vId) {
+                      songs.push({ id: vId, title: vTitle, artist: vArtist, thumb: vThumb });
+                    }
+                  }
+                }
+              }
+            }
           }
         }
-      } else {
-        if (ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
-        audioFallback.src = track.src;
-        if (autoPlay) audioFallback.play();
-      }
 
-      updateMediaSession(track);
-    }
-
-    function togglePlay() {
-      if (currentSourceType === 'youtube') {
-        if (!ytPlayer) return;
-        const state = ytPlayer.getPlayerState();
-        if (state === YT.PlayerState.PLAYING) {
-          ytPlayer.pauseVideo();
-        } else {
-          ytPlayer.playVideo();
-        }
-      } else {
-        if (audioFallback.paused) {
-          audioFallback.play();
-        } else {
-          audioFallback.pause();
-        }
-      }
-    }
-
-    audioFallback.onplay = () => {
-      isPlaying = true;
-      playBtn.innerHTML = '<i class="ph-bold ph-pause"></i>';
-      coverArt.classList.add('playing');
-      startProgressLoop();
-    };
-
-    audioFallback.onpause = () => {
-      isPlaying = false;
-      playBtn.innerHTML = '<i class="ph-bold ph-play"></i>';
-      coverArt.classList.remove('playing');
-      stopProgressLoop();
-    };
-
-    audioFallback.onended = () => { nextTrack(); };
-
-    function onPlayerStateChange(event) {
-      if (currentSourceType !== 'youtube') return;
-
-      if (event.data === YT.PlayerState.PLAYING) {
-        isPlaying = true;
-        playBtn.innerHTML = '<i class="ph-bold ph-pause"></i>';
-        coverArt.classList.add('playing');
-        startProgressLoop();
-      } else {
-        isPlaying = false;
-        playBtn.innerHTML = '<i class="ph-bold ph-play"></i>';
-        coverArt.classList.remove('playing');
-        stopProgressLoop();
-      }
-
-      if (event.data === YT.PlayerState.ENDED) {
-        nextTrack();
-      }
-    }
-
-    function prevTrack() {
-      if (playlist.length === 0) return;
-      currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
-      loadTrack(currentTrackIndex, true);
-    }
-
-    function nextTrack() {
-      if (playlist.length === 0) return;
-      currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-      loadTrack(currentTrackIndex, true);
-    }
-
-    function startProgressLoop() {
-      stopProgressLoop();
-      progressInterval = setInterval(() => {
-        let currentTime = 0;
-        let duration = 0;
-
-        if (currentSourceType === 'youtube') {
-          if (ytPlayer && ytPlayer.getCurrentTime) {
-            currentTime = ytPlayer.getCurrentTime() || 0;
-            duration = ytPlayer.getDuration() || 0;
+        // Fallback Regex jika JSON Parse gagal
+        if (songs.length === 0) {
+          const regex = /"videoId":"([a-zA-Z0-9_-]{11})"/g;
+          const ids = [];
+          let m;
+          while ((m = regex.exec(html)) !== null) {
+            if (!ids.includes(m[1])) ids.push(m[1]);
           }
-        } else {
-          currentTime = audioFallback.currentTime || 0;
-          duration = audioFallback.duration || 0;
-        }
-
-        if (duration > 0) {
-          const pct = (currentTime / duration) * 100;
-          progressFill.style.width = pct + '%';
-          currentTimeEl.innerText = formatTime(currentTime);
-          durationEl.innerText = formatTime(duration);
-        }
-      }, 500);
-    }
-
-    function stopProgressLoop() {
-      if (progressInterval) clearInterval(progressInterval);
-    }
-
-    function seekTrack(e) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-
-      if (currentSourceType === 'youtube') {
-        if (!ytPlayer || !ytPlayer.getDuration) return;
-        const duration = ytPlayer.getDuration();
-        ytPlayer.seekTo((clickX / rect.width) * duration, true);
-      } else {
-        if (!audioFallback.duration) return;
-        audioFallback.currentTime = (clickX / rect.width) * audioFallback.duration;
-      }
-    }
-
-    function formatTime(sec) {
-      const m = Math.floor(sec / 60);
-      const s = Math.floor(sec % 60);
-      return `${m}:${s < 10 ? '0' : ''}${s}`;
-    }
-
-    function updateMediaSession(track) {
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: track.title,
-          artist: track.artist,
-          album: 'exWann Music',
-          artwork: [{ src: track.cover, sizes: '512x512', type: 'image/jpeg' }]
-        });
-
-        navigator.mediaSession.setActionHandler('play', () => togglePlay());
-        navigator.mediaSession.setActionHandler('pause', () => togglePlay());
-        navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
-        navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
-      }
-    }
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW Error:', err));
-    }
-  </script>
-</body>
-</html>
+          songs = ids.slice(0, 5).map(id => ({
+            id: id,
+            title: `Lagu YouTube (${id})`,
+            artist: "exWann Audio",
+            thumb: `

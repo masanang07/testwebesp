@@ -38,7 +38,6 @@
       overflow-x: hidden;
     }
 
-    /* Main App Layout */
     .app-container {
       display: flex;
       flex: 1;
@@ -46,7 +45,6 @@
       overflow: hidden;
     }
 
-    /* Sidebar Navigation */
     .sidebar {
       width: 240px;
       background: var(--bg-side);
@@ -103,7 +101,6 @@
       color: var(--primary);
     }
 
-    /* Main Content Area */
     .main-content {
       flex: 1;
       background: radial-gradient(circle at 50% -20%, rgba(6, 182, 212, 0.15) 0%, transparent 60%);
@@ -114,7 +111,6 @@
       gap: 28px;
     }
 
-    /* Header & Search Bar */
     .top-header {
       display: flex;
       align-items: center;
@@ -178,7 +174,6 @@
       gap: 10px;
     }
 
-    /* Search Results Grid */
     .results-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -264,7 +259,6 @@
       text-overflow: ellipsis;
     }
 
-    /* Queue / Playlist Section */
     .playlist-table {
       display: flex;
       flex-direction: column;
@@ -317,7 +311,6 @@
       color: var(--text-muted);
     }
 
-    /* Sticky Bottom Player Bar */
     .player-bar {
       height: var(--player-height);
       background: rgba(14, 20, 34, 0.95);
@@ -378,7 +371,6 @@
       margin-top: 2px;
     }
 
-    /* Center Player Controls */
     .player-controls-center {
       display: flex;
       flex-direction: column;
@@ -466,7 +458,6 @@
       pointer-events: none;
     }
 
-    /* Mobile Adaptations */
     @media (max-width: 768px) {
       .sidebar { display: none; }
       .app-container { height: calc(100vh - var(--player-height)); }
@@ -483,7 +474,6 @@
 <body>
 
   <div class="app-container">
-    <!-- Sidebar Left -->
     <aside class="sidebar">
       <div class="brand">
         <i class="ph-bold ph-music-notes"></i>
@@ -503,9 +493,7 @@
       </nav>
     </aside>
 
-    <!-- Main Content Area -->
     <main class="main-content">
-      <!-- Search Header -->
       <div class="top-header">
         <div class="search-wrapper">
           <i class="ph-bold ph-magnifying-glass" style="color:var(--text-muted); font-size:18px;"></i>
@@ -514,7 +502,6 @@
         </div>
       </div>
 
-      <!-- Search Results Section -->
       <section id="resultsSection" style="display:none;">
         <div class="section-title">
           <i class="ph-bold ph-sparkle" style="color:var(--primary);"></i>
@@ -523,7 +510,6 @@
         <div id="resultsGrid" class="results-grid"></div>
       </section>
 
-      <!-- Queue / Playlist Section -->
       <section id="queueSection">
         <div class="section-title">
           <i class="ph-bold ph-queue" style="color:var(--accent);"></i>
@@ -534,7 +520,6 @@
     </main>
   </div>
 
-  <!-- Bottom Sticky Player Bar -->
   <footer class="player-bar">
     <div class="now-playing-left">
       <img id="playerCover" class="now-playing-cover" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&q=80" alt="Cover">
@@ -590,6 +575,7 @@
     let ytPlayer = null;
     let isPlaying = false;
     let progressInterval = null;
+    let errorAttempts = 0; // Guard pembatas error
 
     const playerCover = document.getElementById('playerCover');
     const playerTitle = document.getElementById('playerTitle');
@@ -690,6 +676,7 @@
     }
 
     function selectAndPlaySong(title, artist, ytId, cover) {
+      errorAttempts = 0;
       const newTrack = { title, artist, ytId, cover };
       playlist.unshift(newTrack);
       currentTrackIndex = 0;
@@ -711,6 +698,7 @@
           <i class="ph-bold ${idx === currentTrackIndex && isPlaying ? 'ph-speaker-high' : 'ph-play'}" style="color:var(--primary);"></i>
         `;
         row.onclick = () => {
+          errorAttempts = 0;
           currentTrackIndex = idx;
           loadTrack(idx, true);
         };
@@ -724,8 +712,6 @@
       playerTitle.innerText = track.title;
       playerArtist.innerText = track.artist;
       playerCover.src = track.cover;
-
-      renderPlaylist();
 
       if (ytPlayer && ytPlayer.loadVideoById) {
         if (autoPlay) {
@@ -751,16 +737,15 @@
     function onPlayerStateChange(event) {
       if (event.data === YT.PlayerState.PLAYING) {
         isPlaying = true;
+        errorAttempts = 0; // Reset penanda error pas berhasil muter
         playBtn.innerHTML = '<i class="ph-bold ph-pause"></i>';
         playerCover.classList.add('playing');
         startProgressLoop();
-        renderPlaylist();
       } else {
         isPlaying = false;
         playBtn.innerHTML = '<i class="ph-bold ph-play"></i>';
         playerCover.classList.remove('playing');
         stopProgressLoop();
-        renderPlaylist();
       }
 
       if (event.data === YT.PlayerState.ENDED) {
@@ -769,12 +754,24 @@
     }
 
     function onPlayerError(e) {
-      console.warn("Video diblokir YouTube (Error: " + e.data + "), memutar lagu berikutnya...");
-      nextTrack();
+      console.warn("Video error code:", e.data);
+      errorAttempts++;
+      
+      // Mencegah looping loncat-loncat tanpa henti
+      if (errorAttempts < playlist.length) {
+        nextTrack();
+      } else {
+        errorAttempts = 0;
+        isPlaying = false;
+        playBtn.innerHTML = '<i class="ph-bold ph-play"></i>';
+        playerCover.classList.remove('playing');
+        stopProgressLoop();
+      }
     }
 
     function prevTrack() {
       if (playlist.length === 0) return;
+      errorAttempts = 0;
       currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
       loadTrack(currentTrackIndex, true);
     }

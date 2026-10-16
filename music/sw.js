@@ -1,5 +1,5 @@
-const CACHE_NAME = 'exwann-music-v1';
-const APP_ROOT = '/music/';
+const CACHE_NAME = 'exwann-music-v2';
+const APP_ROOT = new URL('./', self.registration.scope).pathname;
 
 self.addEventListener('install', event => {
   self.skipWaiting();

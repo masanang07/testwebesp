@@ -1,0 +1,16 @@
+
+# Rahasia dan konfigurasi lokal
+.env
+.env.*
+!.env.example
+
+# Hasil build dan dependensi
+node_modules/
+dist/
+
+# Backup lokal
+*.backup
+*.bak
+*.backup-*
+*.pre-supabase-*
+*.sebelum-youtube.*
